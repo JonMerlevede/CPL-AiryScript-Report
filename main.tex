@@ -1,0 +1,194 @@
+%        File: solutions.tex
+%     Created: ma okt 10 02:00  2011 C
+% Last Change: ma okt 10 02:00  2011 C
+%
+%\documentclass[a4paper,10pt,notitlepage]{article}
+\documentclass[a4paper,10pt,notitlepage]{scrartcl}
+%\documentclass{beamer}
+%\usetheme{Warsaw}
+
+% Changed behavior
+\usepackage[english]{babel}
+\usepackage[usenames,dvipsnames,svgnames]{xcolor} % color ?
+\usepackage{hyperref} % provides hyperref, url and href
+\usepackage{graphicx} % color graphs ?
+%\usepackage[justification=centering]{caption} % centers captions
+\usepackage{mdframed} % framed boxes that span accross pages
+  % Provides spacing option. Use \singlespacing, \doublespacing or
+  % \onehalfspacing to control spacing, or use the doublespace, onehalfspace or
+  % singlespace environments.
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage{dblfloatfix} %figure* in multicol can also be at bottom
+
+% Commands
+\usepackage{xifthen} 
+\usepackage{xparse} % advanced environments
+\usepackage[normalem]{ulem}  % strikeout using \sout in normal mode
+\usepackage{cancel} % strikeout using \cancel in math mode
+\usepackage{soul} % highlighting using \hl
+%\usepackage[authoryear]{natbib}% provides citet, citep, sitet*
+%\usepackage[backend=bibtex,style=alphabetic]{biblatex} 
+%\addbibresource{library}%
+
+% Environments
+\usepackage{framed} % framed environment
+\usepackage{verbatim} % something to do with the verbatim environment…
+  \setlength{\columnsep}{0.5cm} % set column separation
+\usepackage{multicol} % multi column layout
+\usepackage{subfig}   % provides subfloat
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+\usepackage{pstricks}
+\usepackage{tikz} % provides tikzpicture environment
+  % Provides arrows and replacing functions
+  \usetikzlibrary{decorations.pathreplacing,
+    decorations.markings, % for postdecorating markings
+    arrows,
+    positioning,
+    calc,
+    shapes,
+    scopes,
+    backgrounds
+  }
+\usepackage{listings} % provides listings environment for code listing
+  \lstset{%
+    basicstyle=\small
+}
+
+% Math
+\usepackage{amsmath,amssymb,amstext}
+\usepackage{mathtools} % provides matrix* with alignment option!
+% Provides theorems, …, & proofs
+  \usepackage{amsthm}
+    % Standard theorems numbered by section
+    \newtheorem{theorem}{Theorem}[section]
+    \newtheorem{lemma}[theorem]{Lemma}
+    \newtheorem{proposition}[theorem]{Proposition}
+    \newtheorem{corollary}[theorem]{Corollary}
+    % Self-defined ‘plain theorems’; continuous numbering
+    \newtheorem{ptheorem}{Theorem}
+    \newtheorem{plemma}[ptheorem]{Lemma}
+    \newtheorem{pproposition}[ptheorem]{Proposition}
+    \newtheorem{pcorollary}[ptheorem]{Corollary}
+    \theoremstyle{definition}
+    \newtheorem{pdef}{Definition}
+    %\theoremstyle{remark}
+    \newtheorem{premark}{Remark}
+    \renewcommand{\qedsymbol}{$∎$}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                                  % UNICODE %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{fontspec}
+%\usepackage{unicode-math}
+%  \setmainfont{XITS}
+%  \setmathfont{XITSMath}
+%  \setmonofont[Scale=0.80]{DejaVu Sans Mono}
+%  \setmonofont[Mapping=tex-text,Scale=0.80]{DejaVu Sans Mono}
+
+  %\setmainfont{LMRoman10-Regular}
+  %\setmainfont{LMSans10-Regular}
+  %\setmathfont{LMMath-Regular}
+  %\setmonofont{LMMono10-Regular}
+% Provides listings environment (like verbatim but more powerful)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                                % MY COMMANDS %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% From http://www.dfcd.net/articles/latex/latex.html
+\newcommand{\avg}[1]{\left< #1 \right>} % for average
+\let\underdot=\d % rename builtin command \d{} to \underdot{}
+\renewcommand{\d}[2]{\frac{d #1}{d #2}} % for derivatives
+\newcommand{\dd}[2]{\frac{d^2 #1}{d #2^2}} % for double derivatives
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}  % partial derivative
+\newcommand{\pdd}[2]{\frac{\partial^2 #1}{\partial #2^2}} % double ""
+\newcommand{\abs}[1]{\left| #1 \right|} % absolute value
+\let\baraccent=\= % rename builtin command \= to \baraccent
+\renewcommand{\=}[1]{\stackrel{#1}{=}} % for putting numbers above =
+
+\newcommand{\argmax}[1]{\underset{#1}{\operatorname{argmax}}}
+%\newcommand{\argmax}{\operatornamewithlimits{argmax}}
+%\DeclareMathOperator*{\argmax}{arg\,max}
+\newcommand{\field}[1]{\mathbb{#1}} % requires amsfonts
+\newcommand{\jdef}[1]{{\bfseries \color{MidnightBlue}{#1}}}
+\newcommand{\je}[1]{{\bfseries \color{MidnightBlue}{#1}}}
+\newcommand{\jst}[2]{\ensuremath{#1^{(#2)}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                              % MY ENVIRONMENTS %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% fmpage
+\newsavebox{\fmbox}
+\NewDocumentEnvironment{fmpage}{O{\textwidth}}
+  {\begin{mdframed}}
+  {\end{mdframed}}
+% jinfo
+\NewDocumentEnvironment{jinfo}{O{\textwidth}o} %%%%%%%%
+  {\begin{fmpage}[#1]}
+  {\end{fmpage}
+    \IfNoValueTF{#2}
+    {} %empty
+    {\begin{center}Source: \url{#2}\end{center}} %not empty
+  }
+% jpic
+\newenvironment{jcpic}[1][] %%%%%%%%%
+  {\begin{center}\begin{tikzpicture}[#1]}
+  {\end{tikzpicture}\end{center}}
+% tablehere
+\makeatletter
+\newenvironment{tablehere}
+  {\def\@captype{table}}
+  {}
+% figurehere
+\newenvironment{figurehere}
+  {\def\@captype{figure}}
+  {}
+\makeatother
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                                 % AESTATICS %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[a4paper,hmargin=2.5cm,vmargin=2.5cm]{geometry}
+%\usepackage[calcwidth]{titlesec}
+%\titleformat{\section}{\large\bfseries}{\thesection.}{0.5em}{}
+%\titleformat{\section}{\large\bfseries}{§}{0.5em}{}
+%\titleformat{\subsection}{\normalsize\bfseries}{}{0em}{}
+%\titleformat{\subsubsection}[block]
+%  {\normalsize\it}
+%  {}
+%  {0em}
+%  {}
+%  [\vspace{-1em}\rule{\titlewidth}{1pt}]
+%\renewcommand{\bar}{\overline}
+\let\vaccent=\v % rename builtin command \v{} to \vaccent{}
+\renewcommand{\v}[1]{\ensuremath{\mathbf{#1}}} % for vectors
+
+%Fancy headers
+\usepackage{fancyhdr}
+  \usepackage{lastpage} % the \thepage{} command, total #pages
+  \setlength{\headheight}{15pt} 
+  \pagestyle{fancyplain}
+    %\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+    \lhead{Designing AiryScript}
+    \chead{}
+    \rhead{\fancyplain{}{David Merckx, Jonathan Merlevede, Tom op’t Roodt,
+    Kristof Peeters}}
+    %\rhead{\fancyplain{}{\textit{\leftmark}}}
+    \lfoot{}
+    \cfoot{\fancyplain{}{\thepage{} of \pageref{LastPage}}}
+    \rfoot{}
+\usepackage[calcwidth]{titlesec}
+%\titleformat{\section}{\large\bfseries}{\thesection.}{0.5em}{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                             % DOCUMENT SPECIFIC %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Document-specific commands
+  \hyphenation{Handels-reizigers-probleem}
+
+
+\begin{document}
+\input{body}
+\end{document}
