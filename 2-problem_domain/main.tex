@@ -1,24 +1,132 @@
 \section{Problem Domain}
-This section describes the problem domain underlying AiryScript. The first
-subsection lists domain elements already present in the original commissioning
-made by GlobAir Inc.. The second subsection continues by filling in the blanks
-that were left in there. Together, the first and second subsections provide a
-complete description of the problem domain. The third subsection analyses the
-problem domain, trying to distinguish core concepts from details and connecting
-the concepts. It thereby acts as an important basis for the design of
-AiryScript.
+\label{sec:domain}
+%A thorough understanding of the problem domain is not only crucial to the
+%development of a decent DSL, but also for its understanding.
 
-\subsection{Original commissioning}
-This subsection documents the domain elements present in the original
-commissioning made by GlobAir Inc..
+This section describes the problem domain underlying AiryScript. It does not
+contain the elements that were already present in the original commissioning
+made by GlobAir Inc..
+
+Subsection \ref{sec:domain_description} documents the domain elements that are
+missing from the original description.
+%
+Subsection \ref{sec:domain_analysis} contains an analysis of the entire problem
+domain. It lists all the relations that exist in between domain elements.
+It thereby acts as an important basis for the design of AiryScript.
+
+\subsection{Domain description}
+\label{sec:domain_description}
+This subsection documents all the additional elements that are missing from the
+original job description made by GlobAir Inc.. It elaborates and justifies all
+elements that do not have domain expert David Clarke as their source.
 
 
-\subsection{Filling in the blanks}
-This subsection documents problem domain elements that are not in the original
-commissioning made by GlobAir Inc.. Most of these decisions were made in
-consultation with GlobAir’s domain expert Dave Clarke.
+\subsubsection{Unsupported operations}
+This subsection gives an overview of some of the more important operations that
+are currently not supported by AiryScript.
+
+There is some functionality that might be required of AiryScript before it goes
+live. AiryScript does currently not provide the following functionality because
+AiryScript is still just a proof of concept, and the assignment does not mention
+it.
+\begin{itemize}
+  \item Booking flights.
+  \item Retrieving information from the database.
+  \item Keeping track of individual airplanes.
+\end{itemize}
+
+In consultation with the domain expert, AiryScript does currently not provide
+the following functionality.
+\begin{itemize}
+  \item Overbooking, i.e. the number of seats in an airplane has to be equal to
+    the number of seats the user has to specify prices for.
+  \item Codeshare agreements, i.e. a flight has to map onto a single airline
+    company.
+\end{itemize}
+
+\subsubsection{Unspecified, supported operations}
+In consultation with the domain expert, AiryScript provides the following
+functionality that is not specified in the original assignment.
+\begin{itemize}
+  \item Changing the airplane type of flight templates. By changing the airplane
+    type of flight templates, the history track of flown flights is not changed,
+    and neither are any of the specific instances of the flight templates for
+    which another airplane was already specified.
+
+    AiryScript also supports changing the airplane type of specific flights. It
+    does currently not support specifying periods over which a flight template
+    is serviced by a specific airplane type.
+\end{itemize}
+
+
+\subsubsection{Additional decisions}
+When implementing AiryScript, we also made some decisions that we did not
+discuss with the domain expert.
+\begin{itemize}
+
+  \item The original domain description is not specific on how elaborate
+    descriptions of new flights can be. The assignment describes flight
+    templates, which correspond to weekly recurring flights. The assignment also
+    hints that there can also be individual, non-recurring flights.
+    
+    AiryScript supports defining single flights and weekly flight patterns,
+    possibly with multiple flying days per week and multiple flights per day. It
+    also supports specifying multiple, possibly disconnected time periods over
+    which the flight pattern is valid.
+    
+    This means that users can make statements like the following.
+    \begin{quote}
+      There is a flight every Monday at 13:00 and Friday at 17:30 starting from
+      August 2013 and ending at September 2013. Starting from October 2013 and
+      until the end of times, only the flight on Monday remains.
+    \end{quote}
+    This also means that users cannot specify a flight pattern occurring every
+    third Friday of the month.
+    
+    AiryScript supports manually adding flights to flight codes. In this
+    way, exceptional one-time only flights do not require modifying the flight
+    template that corresponds to the flight code. Also users who really want to
+    schedule flights each third Friday of the month can use this functionality
+    to manually add flights.
+
+  \item AiryScript supports changing the prices of individual seats of
+    individual flights and the prices of flight templates, possibly only over a
+    specified period. Users can also use seat types to specify groups of seats
+    for which to change the price; these seat types are specified by the type of
+    airplane.
+
+    Binding seat types to airplanes has advantages and disadvantages. The
+    greatest advantage is that users can use seat types to specify prices on a
+    newly created flight, without having to specify how many seats seats should
+    cost extra because they come with extra leg space. The greatest disadvantage
+    is that it currently makes it impossible to specify additional pricing
+    groups that are valid only for a specific flight.
+
+    We feel that the advantages of binding seat types to airplane types outweigh
+    its disadvantages. Users can still specify any prices they want, because
+    they can change prices of individual seats. If required, it would also
+    certainly be possible to provide names for groups of seats that are tied to
+    individual flights or flight templates.
+
+    AiryScript does not support changing prices as a function of time.
+
+  \item AiryScript always requires users to specify an airplane type when
+    creating individual flights or flight templates.
+
+    We believe this restriction is justified, because AiryScript supports
+    changing the airplane type of a flight after its creation. If a user really
+    has no idea of the type of airplane that is used for the flight he is
+    inserting, he or she can create a dummy airplane.
+\end{itemize}
+
+One of the more confusing aspects of the domain description is the description
+of a flight. When the domain expert refers to a flight it can mean either an
+individual flight or a recurring flight. To avoid confusion we use flight only
+in its first meaning. We use  \jdef{flight template} instead of flight in its
+second meaning.
 
 \subsection{Domain analysis}
+\label{sec:domain_analysis}
 This subsection analyses the domain elements introduced by the previous two
 subsections. It acts as a basis for decisions on the syntax of AiryScript.
 
