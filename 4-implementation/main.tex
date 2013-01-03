@@ -3,34 +3,26 @@
 \subsection{Implementation overview}
 
 We divided the implementation in 3 parts:
-- The parser:
-	Responsible for parsing a string into the right operation,
-	or returning a parse error if the given expression was incorrect.
-- The operation handler:
-	The actual implementation of all the different operators.
-	This part is responsible for verifying all the arguments of an operation
-	and either trowing an error if these arguments were incorrect/incomplete or
-	performing the operation. Both for verifying aswell as performing an operation
-	database acces is required.
-- The database:
-	We used an SQL database to backup the system. The implementation of this
-	database closely resembles the domain model.
+\begin{enumerate}
+\item The parser: Responsible for parsing a string into the right operation, or
+returning a parse error if the given expression was incorrect.
+\item The operation handler: The actual implementation of all the different
+operators. This part is responsible for verifying all the arguments of an
+operation and either trowing an error if these arguments were
+incorrect/incomplete or performing the operation. Both for verifying aswell as
+performing an operation database acces is required.
+\item The database: We used an SQL database to backup the system. The
+implementation of this database closely resembles the domain model.
+\end{enumerate} 
 	
-All of the operations and types are resembled 1 to 1 by a case class in scala.
-The parser will parse a string into an operation, after which this is passed
-to the second phase. The handler can then handle these operations by pattern
-matching over the different kinds of operators and their respective arguments.
-The 
-
-\subsection{Implementation of a parser in Scala}
-
-The responsibily of our parser is to turn a string into one of the possible
-operations, or throw an error if the syntax is incorrect. We extended the
-StandardTokenParsers class available in the standard scala api, this allows to
-make a clean parser written in pure functional code.
-
-The first step in the process of parsing 
+\par
+All of the operations and types are resembled by a single case class in scala,
+which captures all of the required information to use this. The parser will
+parse a string into an operation, after which this is passed to the second
+phase. The handler can then handle these operations by pattern matching over the
+different kinds of operators and their respective arguments.
 
 
-
-\subsection{Implementation of a parser in Scala}
+\input{4-implementation/parser}
+\input{4-implementation/handler} 
+\input{4-implementation/database}

@@ -1,0 +1,101 @@
+\subsection{Scala Parser}
+
+The responsibily of our parser is to turn a string into one of the possible
+operations, or throw an error if the syntax is incorrect. We extended the
+StandardTokenParsers class available in the standard scala api, this allows to
+make a clean, extendable parser written in pure functional code.
+
+\subsubsection{Tokens} 
+
+The first step in the process of parsing is translating the string into a list
+of tokens. Special sequences within the string will be converted into special
+tokens aswell.
+
+\par
+There are 4 kinds of tokens:
+\begin{description}
+\item[keywords] There are 2 sort of sequences that can be parsed into a keyword
+token:
+	\begin{description}
+	\item[delimiters] whenever one of these sequences is recognized it is parsed
+	into a delimiter-token. The delimiters in our implementation are: \sn{\{},
+	\sn{\}}, \sn{,}, \sn{:}.
+	\item[reserved keywords] These sequences are only parsed into their
+	corresponding tokens if they are not part of a larger word. Concretely this
+	means that they are only parsed if they are surrounded by white space or
+	delimiters. The reserved keywords in our implementation are all the words used
+	to describe operations: \sn{ADD},\sn{CITY}, \sn{AIRPORT}, etc.
+	\end{description}
+\item[numeric literal] Whenever a sequence of numbers is spotted, this will be
+parsed into a numeric literal token.
+\item[string literal] Whenever a sequence between quotation marks is found it is
+converted as a whole into a string literal, so within this sequence no further
+splitting is done. This is usefull for providing strings that contain spaces
+such as \sn{New York}.
+\item[identifier] Basically any kind of words that were not described before,
+they are sepeterated by delimiters and white space.
+\end{description}
+	
+\par
+Parsing the string \sn{ADD CITY \{name:Brussels, short:BRU\}} will result into
+the following list: \sn{ADD}, \sn{CITY}, \sn{"\{"}, \sn{ident name}, \sn{":"},
+\sn{ident Brussels}, \sn{","}, \sn{ident short}, \sn{":"}, \sn{BRU}, \sn{"\}"}.
+ 
+\par
+Note that the actual creation of these tokens is completely done by the
+StdTokenParsers class that we extended. The only thing we provide is the list
+with delimiters and reserved keywords.
+
+
+\subsubsection{Parsing operators}
+
+Ones a list of tokens is obtained the actual parsing can start. We can use the
+syntax provided by the StdTokenParsers class to do this.
+
+\par
+The first step in parsing an operation is quite simple. Since every operator
+has a unique syntax to call it we just try to match the current string with
+a list of all the possible operators. A fragment of this part:
+
+\begin{lstlisting}
+def parseOp(): Parser[Operation]  =
+    "ADD" ~> "CITY" ~> parseCityData ^^ {c => new AddCity(c)} |
+    "ADD" ~> "AIRPORT" ~> parseAirportData ^^ {a => new AddAirport(a)} |
+    \ldots
+\end{lstlisting}
+
+\par
+StanderdTokensParsers provides us with range of special operations that can
+easily be used to parse tokens. The \sn{\textasciitilde>} in the fragment above is used to
+match a keyword token corresponding to that string, the result obtained form
+this match is however discarted. The \sn{\textasciicircum\textasciicircum} is
+used to retain the result from this line of match operators. In the first line of our example above this will
+simply be the result of parseCityData, since the result of the other match
+operations got discarted.
+
+
+\subsubsection{Parsing types}
+
+Parsing types is analoug to parsing operators, only that a few additional
+problems have to be tackled here. Let us look at the example of parsing city
+data. For this example sn{\{name:Brussels, short:BRU\}} and \sn{\{short:BRU,
+name:Brussels\}} are both valid descriptions of city data. The order in which
+the attributes appear in the definition do not matter. Also the user does not
+have to explicitly mention what kind data he is providing. That means that we
+need to check if the data he provided matches any of the possible formats for
+this operation. Since data types can be nested we need to check all
+possibilities and backtrack when a mismatch is spotted.
+
+\par
+Luckily the implementation for backtracking is already present in the parser we
+extended. We have to use the right operators however to trigger this. Whenever
+we use the \sn{\textasciicircum?} operator it will behave the same as a the
+\sn{\textasciicircum\textasciicircum} operator except that when the result cannot
+match we will backtrack instead of fail parsing.
+
+\par
+We implemented a general way of dealing with the order of attributes. Whenever
+we start parsing any kind of data object we pull out all of its attributes and
+place them in a map. This map can thereafter be consulted to see if all required
+attributes were provided, regardless of the order they were originally provided
+in.
