@@ -13,6 +13,7 @@
 \usepackage{hyperref} % provides hyperref, url and href
 \usepackage{graphicx} % color graphs ?
 %\usepackage[justification=centering]{caption} % centers captions
+\usepackage[format=plain,justification=justified,indention=0cm]{caption}
 \usepackage{mdframed} % framed boxes that span accross pages
   % Provides spacing option. Use \singlespacing, \doublespacing or
   % \onehalfspacing to control spacing, or use the doublespace, onehalfspace or
@@ -212,8 +213,8 @@ tabsize=3}
     %\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
     \lhead{Designing AiryScript}
     \chead{}
-    \rhead{\fancyplain{}{David Merckx, Jonathan Merlevede, Tom op’t Roodt,
-    Kristof Peeters}}
+    \rhead{\fancyplain{}{David Merckx, Jonathan Merlevede, 
+    Kristof Peeters, Tom op’t Roodt}}
     %\rhead{\fancyplain{}{\textit{\leftmark}}}
     \lfoot{}
     \cfoot{\fancyplain{}{\thepage{} of \pageref{LastPage}}}
@@ -226,7 +227,8 @@ tabsize=3}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Document-specific commands
 \newcommand{\sn}[1]{\texttt{#1}} % for double derivatives
-
+\newcommand{\dbf}[1]{\texttt{#1}}
+\graphicspath{{./img/}}
 \begin{document}
 \input{body}
 \end{document}
