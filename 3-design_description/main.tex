@@ -1,4 +1,7 @@
 \section{Design description}
+This section describes the development process of the actual design of the DSL
+implemented by AiryScript.
+
 \subsection{Picking a programming language}
 
 \subsection{Devising a language syntax}
@@ -9,5 +12,339 @@
 
 \subsubsection{Iteration three}
 
-\subsection{Defining appropriate types}
+
+\subsection{Describing and creating types}
+\label{sec:syntax_spec}
+This section specifies how to create structures in AiryScript and explains the
+notation that Section \ref{sec:operations} uses to specify types. Even though
+AiryScript does not require its users to declare types or provide them with
+the possibility to define their own types, knowing how to describe these types
+and how the typing system of AiryScript works is important, since AiryScript is
+a typed language.
+
+\paragraph{Primitive types}
+AiryScript supports strings and integers as primitive types. The statements
+\begin{quote}
+  \tye{5}\\
+  \tye{502349}
+\end{quote}
+define the integers 5 and 502349. The statements
+\begin{quote}
+  \tye{IAmFreeOfSpacesAndIThereforeDoNotRequireQuotation}\\
+  \tye{"I am not free of spaces and therefore I do require quotation"}\\
+  \tye{"IAmFreeOfSpacesYetICanStillUseQuotation"}
+\end{quote}
+each define a string. Users should surround strings that contain spaces with
+quotation marks.
+
+
+\paragraph{Structures}
+AiryScript also supports structures. Structures consist of one or several
+properties. Properties have a name and a value. A name is always a string that
+does not contain any spaces. A value is either a primitive value or another
+structure. Names are separated from values by a colon, properties are separated
+from each other by commas and structures are defined within curly brackets. As
+an example,
+\begin{quote}
+  \ins{a: 10, b: 5}
+\end{quote}
+defines a structure with a property named \tye{a} that has an integer primitive
+value of ten and a property named \tye{b} that has an integer primitive value of
+five. AiryScript is not sensitive to whitespace or newlines. For example,
+\begin{quote}
+  \begin{verbatim}
+{  a:10, b       :
+                    5}
+  \end{verbatim}
+\end{quote}
+defines the same structure as before.
+
+
+\paragraph{Basic structure types}
+In the documentation,
+\begin{quote}
+  \ty{A}\tye{ = \ins{a: Int, b: String}}
+\end{quote}
+defines \ty{A} to be shorthand for the type that collects all structures that
+have properties named \tye{a} and \tye{b} with respective types \tye{Int} and
+\tye{String}. This simple definition completely describes a type. If AiryScript
+would allow users to define their own types and operations, this would be the
+syntax it would use.
+
+As an example, the following two lines each define a structure that is an
+instance of \ty{A}.
+\begin{quote}
+  \ins{a: 10, b: tomatoes}\\
+  \ins{b: "bottles of beer", a: 10}\\
+\end{quote}
+
+
+\paragraph{Types with optional properties}
+In the documentation,
+\begin{quote}
+  \ty{B}\tye{ = \ins{a: Int, ?b: Int, ?c: String}}
+\end{quote}
+defines \ty{B} to be shorthand to the type that collects all structures that
+have properties named \tye{a} with type \ty{Int}, and that optionally has two
+more properties with names \tye{b} and \tye{c} and values with respective types
+\ty{Int} and \ty{String}. None of the structures that either have parameters
+with names different from \tye{a}, \tye{b} or \tye{c} or that have an \tye{a},
+\tye{b} or \tye{c} with a different type match \ty{B}.
+
+As an example, all of the following lines define a structure that is an
+instance of \ty{B}.
+\begin{quote}
+  \ins{c: "bottles of beer", a: 10}\\
+  \ins{a: 10, b: 5 c: "bottles of beer"}\\
+  \ins{a: 10, b: 5}
+\end{quote}
+
+\paragraph{Types of nested structures}
+The statement
+\begin{quote}
+  \ty{C}\tye{ = \ins{a: B, b: String}}
+\end{quote}
+defines \ty{C} to be shorthand for the type of structures that have properties
+with names \tye{aB} and \tye{aString}, with types \tye{B} and \tye{String}
+respectively. Since we can further expand \ty{B}, this is in turn shorthand for
+\begin{quote}
+  \ins{a: \ins{a: Int, ?b: Int, ?c: String}, b: String}. 
+\end{quote}
+
+As an example, the following line defines a structure that is an instance of
+\ty{C}.
+\begin{quote}
+  \ins{b: \ins{a: 10, b: 5}, a: "bottles of beer"}
+\end{quote}
+
+\paragraph{Union types}
+The statement
+\begin{quote}
+  \ty{D}\tye{ = A | B}
+\end{quote}
+defines a type that contains both the structures contained in \tye{A} and the
+structures contained in \tye{B}.
+
+As an example, both of the following lines define a structure that is an
+instance of \ty{D}.
+\begin{quote}
+  \ins{a: 10, b: tomatoes}\\
+  \ins{a: 10, b: 5}
+\end{quote}
+
+
+\subsection{Structural type system}
+This section discusses the structural type system of AiryScript by providing an
+extended example.
+
+We look at the type of object $o$ defined as
+\begin{quote}
+  \ins{a: 10, c: "bottles of beer"}.
+\end{quote}
+The type of $o$ is \ins{a: Int, c: String}. A discussion of the relation between
+the type of $o$ and the following types should clarify how the type system of
+AiryScript works.
+\begin{quote}
+  \ty{A}\tye{ = \ins{c: String, a: Int}}\\
+  \ty{B}\tye{ = \ins{a: Int, ?b: Int, ?c: String}}\\
+  \ty{C}\tye{ = \ins{a: Int, b: String, c: String}}\\
+  \ty{D}\tye{ = \ins{c: Int, a: String}}
+\end{quote}
+\begin{itemize}
+  \item $o$ is an instance of \ty{A}. In fact, \ty{A} is just shorthand for
+    $o$’s type. The order in which \tye{c} and \tye{a} appear does not matter:
+    as far as AiryScript is concerned the types \ins{c: String, a:Int}
+    and \ins{a:Int, c: String} are identical. The one-dimensional nature of text
+    makes it so that we have to specify an ordering that is actually
+    meaningless.
+
+  \item $o$ is an instance of \ty{B}, which also means that \ty{A} is a subtype
+    of \ty{B}.  We can ‘ignore’ the optional properties of \tye{c}. Note that
+    the fact that \ty{C} can be a super type of \ty{B} without having to specify
+    this in \ty{C} is quite special, and typical for structural type systems.
+
+  \item $o$ is not an instance of \ty{C}. \ty{A} and \ty{C} are not related.
+    
+    While in most existing structural type systems, like the one of Haxe, \ty{C}
+    would be a subtype of \ty{B}, this is not the case in AiryScript. This is
+    because AiryScript does not allow users to specify properties that are not
+    defined by the type. \ins{a: "bla"} is not an instance of type \ins{a:
+    String, b: String} in AiryScript. The only way to to create a typing
+    hierarchy is through optional parameters.
+
+  \item $o$ is not an instance of \ty{D}. \ty{A} and \ty{D} are not related.
+    
+    Even though \ty{D} also consists of two properties, one an \tye{Int} and one
+    a \tye{String}, \ty{D} is unrelated to \ty{A} because the names of these
+    properties are different in \ty{D} and \ty{A}. The names of properties are
+    part of the type, which allows AiryScript to make types independent of the
+    order of their properties.
+\end{itemize}
+
+\subsection{Operations}
+\label{sec:operations}
+\subsubsection{General types}
+The type system of AiryScript is.
+\begin{itemize}
+  \item Strongly typed: when AiryScript expects a parameter of type $T$, it is
+    not possible to provide it with another type. It is not possible to cast
+    values to another type, and there is no type that matches all types.
+  \item Statically typed: AiryScript determines and checks types at
+    compile-time.
+  \item Structural: type compatibility and equivalence are determined by the
+    type’s actual structure or definition. Even if 
+  \item Implicit: AiryScript never requires the user to explicitly declare any
+      types.
+\end{itemize}
+
+
+\subsubsection{Basic types}
+\begin{description}
+  \item[\ty{Time}] \tye{= \{?h:Int (0), ?m:Int (0), ?s:Int (0)\}}
+
+    Specifies either a time period (e.g. a flight takes 5 hours) or a time of
+    day (e.g. a flight is at 13h).
+  \item[\ty{Date}] \tye{= \{d:Int, m:Int, y:Int\}}
+
+    Specifies a date.
+  \item[\ty{DateTime}] \tye{= \{date:Date, ?time:Time (\{ \})\}}
+
+    Specifies a specific point in time. 
+  \item[\ty{Price}] \tye{= \{?dollar:Int (0), ?cent:Int (0)\}}
+  \item[\ty{TimePeriod}] \tye{= \{from:DateTime, to:DateTime\}}
+\end{description}
+
+\subsubsection{City}
+City types are
+\begin{description}
+  \item[\ty{City}] \tye{= \{?name: String\}}
+  \item[\ty{City\_data}] \tye{= \{name: String\}}
+\end{description}
+City operations are
+
+
+\subsubsection{Airport}
+Airport types are
+\begin{description}
+  \item[\ty{Airport}] \tye{= \{?short:String,\\
+      ?name: String,\\
+      ?city:City\}}
+  \item[\ty{Airport\_data}] \tye{= \{short:String,\\
+      name: String,\\
+      city:City\}}
+\end{description}
+
+
+\subsubsection{Distance}
+Distance types are
+\begin{description}
+  \item[\ty{Dist}] \tye{= \{?from:City,\\
+      ?to:City,\\
+      ?dist:Int\}}
+  \item[\ty{Dist\_data}] \tye{= \{from:City,\\
+      to:City,\\
+      dist:Int\}}
+\end{description}
+
+\subsubsection{Flight time}
+Flight time types are
+\begin{description}
+  \item[\ty{FlightTime}] \tye{= \{?from:City,\\
+      ?to:city,\\
+      ?airplaneType:airplaneType,\\
+      ?duration:Time\}}
+  \item[\ty{FlightTime\_data}] \tye{= \{from:City,\\
+      to:city,\\
+      airplaneType:airplaneType,\\
+      duration:Time\}}
+\end{description}
+
+
+\subsubsection{Airplane type}
+Airplane type types are
+\begin{description}
+  \item[\ty{AirplaneType}] \tye{= \{?name:String\}}
+  \item[\ty{AirplaneType\_data}] \tye{= \{name:String, arrangement:[Seat\_data]\}}
+\end{description}
+
+
+\subsubsection{Seats}
+Seat types are
+\begin{description}
+  \item[\ty{Seat}] \tye{= \{?number:Int, ?type:String\}}
+  \item[\ty{Seat\_data}] \tye{= \{?number:Int, ?amt:Int, type:String\}}
+\end{description}
+
+\subsubsection{Airline}
+\begin{description}
+  \item[\ty{Airline}] \tye{= \{?short:String, ?name:String\}}
+  \item[\ty{Airline\_data}] \tye{= \{short:String, name:String\}}
+\end{description}
+
+\subsubsection{Templates}
+\begin{description}
+  \item[\ty{Template}] \tye{= \{?fln:String,\\
+      ?airline:String,\\
+      ?from:City,\\
+      ?to:City,\\
+      ?airplaneType:AirplaneType\}}
+  \item[\ty{Template}] \tye{= \{fln:String,\\
+      airline:String,\\
+      from:City,\\
+      to:City,\\
+      airplaneType:AirplaneType,\\
+      prices:[SeatInstance\_data],\\
+      periods:[Period\_data]\}}
+\end{description}
+
+\subsubsection{Flights}
+\begin{description}
+  \item[Flight] \tye{= \{?template:Template,\\
+      departure:DateTime,\\
+      ?arrival:DateTime,\\
+      ?airplaneType:AirplaneType,\\
+      ?duringInterval:TimePeriod\}\\
+      | \\
+      \{?template:Template,\\
+      ?departure:DateTime,\\
+      arrival:DateTime,\\
+      ?airplaneType:AirplaneType,\\
+      ?duringInterval:TimePeriod\}\\
+      | \\
+      \{?template:Template,\\
+      ?departure:DateTime,\\
+      ?arrival:DateTime,\\
+      ?airplaneType:AirplaneType,\\
+      duringInterval:TimePeriod\}
+    }
+\end{description}
+
+\subsubsection{Period}
+\begin{description}
+  \item[\ty{ContainedPeriod}] \tye{= \{?from:Data, ?to:Date, ?day:Date\}}
+  \item[\ty{Period}] \tye{= \{?contained:ContainedPeriod,\\
+      ?from:Date,\\
+      ?to:Data,\\
+      ?day:String,\\
+      ?startTime:Time\}}
+  \item[\ty{Period\_data}] \tye{= \{?from:Date,\\
+      ?to:Data,\\
+      ?weekday:String,\\
+      startTime:Time\}}
+\end{description}
+
+
+\subsubsection{Seat instances}
+\begin{description}
+  \item[\ty{SeatInstance}] \tye{= \{number:Int,\\
+      ?amt:Int\} \\
+      | \\
+      \{type: String\}}
+  \item[\ty{SeatInstance\_data}]  \tye{= \{number:Int,\\
+      ?amt:Int,\\
+      price:Price\}\\
+      | \\
+      \{type:String,\\
+      price:Price\}}
+\end{description}
 

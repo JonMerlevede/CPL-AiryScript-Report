@@ -7,8 +7,8 @@ This section describes the problem domain underlying AiryScript. It does not
 contain the elements that were already present in the original commissioning
 made by GlobAir Inc..
 
-Subsection \ref{sec:domain_description} documents the domain elements that are
-missing from the original description.
+Subsection \ref{sec:domain_description} documents elements that are
+missing from the original domain description.
 %
 Subsection \ref{sec:domain_analysis} contains an analysis of the entire problem
 domain. It lists all the relations that exist in between domain elements.
@@ -27,9 +27,8 @@ This subsection gives an overview of some of the more important operations that
 are currently not supported by AiryScript.
 
 There is some functionality that might be required of AiryScript before it goes
-live. AiryScript does currently not provide the following functionality because
-AiryScript is still just a proof of concept, and the assignment does not mention
-it.
+live. AiryScript does currently not provide this functionality because it is
+still just a proof of concept, and the assignment does not mention it.
 \begin{itemize}
   \item Booking flights.
   \item Retrieving information from the database.
@@ -337,17 +336,19 @@ AiryScript.
     the template, AiryScript removes all flights that were automatically created
     from the period.
 
-  \item[\dbf{Period}] instances define a time period and are linked to a
-    specific template. The template is valid over the union of all period
-    instances it is linked to.
+  \item[\dbf{Period}] instances define days on which there are flights and are
+    linked to a specific template. The template is valid over the union of all
+    period instances it is linked to.
 
-    A period instance $p$ has only one mandatory property: the hour when a
-    flight matching that period takes off. When not specifying any of its other
-    properties, a period defines a flight that takes off every day at the
-    specified hour from now until the end of times.
+    A period instance $p$ has two mandatory properties: the hour when flights
+    defined by that period takes off and a starting time. When not specifying
+    any of its other properties, a period defines a flight that takes off every
+    day at the specified hour starting from the starting time until the end of
+    times.
 
-    Optionally, we can attach a time period to $p$, for example the time period
-    in between 11/1/2013 and 11/2/2013. $p$ is then only valid over that time
+    Optionally, users can attach an end time in addition to a start time. In
+    this way he or she defines a time period, for example the time period in
+    between 11/1/2013 and 11/2/2013. $p$ is then only valid over that time
     period. When not specifying any other properties besides the hour, $p$
     specifies a flight that takes off every day during the time period, for
     example every day between 11/1/2013 and 11/2/2013 (inclusive).
