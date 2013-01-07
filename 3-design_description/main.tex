@@ -1,26 +1,246 @@
 \section{Design description}
-This section describes the development process of the actual design of the DSL
-implemented by AiryScript.
+This section describes the design of the DSL implemented by AiryScript. It
+contains information on both its development process and its current syntax. The
+next section, 
+\begin{itemize}
+  \item Section \ref{sec:devising_syntax} describes the syntax of the
+    predecessors of AiryScript, and their influence on its current syntax.
+%
+  \item Section \ref{sec:syntax_spec} describes the general syntax of AiryScript
+    for describing data and describing data structures through types.
+%
+  \item Section \ref{sec:structural_type_system} goes into some more detail
+    describing the structural type system of AiryScript.
+%
+  \item Section \ref{sec:operations_spec} describes the general syntax of
+    AiryScript for describing and calling operations.
+%
+  \item Section \ref{sec:protecting} explains why AiryScript provides the user
+    with operations that are sometimes more powerful than they need to be.
+\end{itemize}
 
-\subsection{Picking a programming language}
+\noindent
+Section \ref{sec:operations} thoroughly documents all of the operations that
+AiryScript offers, using the syntax provided in Section \ref{sec:syntax_spec}
+and Section \ref{sec:operations_spec}.
 
 \subsection{Devising a language syntax}
+\label{sec:devising_syntax}
+This section documents how the development process of the syntax of AiryScript.
+
+AiryScript is roughly the third fairly complete language we came up with during
+development, and contains elements of both the first and the second language. In
+the following subsections, we discuss these ‘iterations’ chronologically.
 
 \subsubsection{Iteration one}
+In a first serious attempt at defining AiryScript we tried to approximate
+natural language as closely as possible.
+
+The following commands are examples of expressions in this language.
+\begin{lstlisting}[language=empty,frame=single]
+ADD CITY Brussels, Edinburgh
+ADD AIRPORT Brussels TO Brussels, Edinburgh TO Edinburgh
+ADD COMPANY SAB
+ADD SEATTYPE Economy, Business, First class
+ADD AIRPLANE Boeing 007 WITH 100 Economy SEATS, 20 Business SEATS
+ADD TIME Brussels TO Edinburgh 1h22 BY Boeing 007
+ADD TEMPLATE SAB888 FROM Brussels TO Edinburgh BY Boeing 007
+    WITH 21 euro FOR Economy SEATS, 34 euro FOR Business SEATS
+        FROM 15/12/2012 TO 9/01/2014
+    WITH 168 euro FOR Economy SEATS, 370 euro FOR Business SEATS
+        FROM 15/06/2015 TO 9/12/2016, EACH 2nd FRIDAY OF THE MONTH
+\end{lstlisting}
+
+We decided to get rid of this language because of the following reasons.
+\begin{itemize}
+  \item The ‘natural language’ in our DSL is really quite different from real
+    natural language. We decided that it is not possible to make complicated
+    commands like adding a template look like natural language, because no
+    person would try to specify all there is to know about a template in a
+    single sentence.
+  \item Natural language is different for different persons. The code above
+    is easy to understand, but when trying to document or write a statement in
+    it it quickly becomes clear that this language, like natural language, is
+    fairly irregular and inconsistent.
+  \item Irregular languages are difficult to learn.
+  \item Writing a parser for this language is difficult, both because it is
+    irregular and because of the syntax itself. We prefer not to have any need
+    for semicolons or impose indentation rules on our users, which is pretty
+    much impossible using this syntax, which uses no commas, parenthesis or
+    quotation marks to separate values from language keywords.
+\end{itemize}
+Some of the things we learned in this process are the following.
+\begin{itemize}
+  \item When designing a language, one has to focus on the more complicated
+    statements that language should be capable of expressing.
+
+    Most of the languages one can come up with look nice when expressing the
+    creation of a city, but almost none of them are capable of describing
+    templates without turning ugly.
+  \item It is a bad idea to
+  try and make the language look like natural language.
+  \item It is probably a good idea to keep in mind that the DSL needs to be
+    machine-readable.
+  \item Some things are just way more complicated than people ever care to think
+    about. Statements like ‘a flight flies every year at 12h during every second
+    Friday of the months August and November’ are very powerful and difficult to
+    express in a consistent manner, store and search. Implementing an efficient
+    system that is capable of handling periods like this are not in the scope of
+    this assignment.
+\end{itemize}
+
 
 \subsubsection{Iteration two}
+In a second attempt at defining the AiryScript syntax we came up with a very
+general, powerful and compact syntax that is most certainly targeted towards
+users with other backgrounds than the language of iteration one.
+
+The following commands are examples of expressions in this language. They have
+the same effect as the code in iteration one, except from the fact that we got
+rid of the ‘second Friday of the month’-statement.
+\begin{lstlisting}[language=empty,frame=single]
+AIRPORT { name: Edinburg, city: { name : Edinburg } }
+AIRPORT { name: Zaventem, city: { name : Brussels } }
+TEMPLATE {
+  fln: SAB888
+  from: (name: Brussels)
+  to: (name: Edinburgh)
+  type: { name: "Boeing 007" }
+  periods: [
+    { from: 15/12/2012, to: 9/01/2014, prices: [
+        {type: {name: economy}, price: {euro: 21}},
+        {type: {name: business}, price: {euro: 34}}
+    ]},{ from: 15/06/2015, to: 9/12/2016, prices: [
+        {type: (name: economy), price: {euro: 268}},
+        {type: (name: business), price: {euro: 370}}
+    ]}
+  ]
+}
+\end{lstlisting}
+We envisioned this to be a strongly, statically typed language that did not
+require the user to ever really specify any types. Curly brackets create a new
+structure that would automatically be added to the database, whereas parenthesis
+select a structure that already exists. We also developed a syntax to modify
+existing structures.
+
+We decided to get rid of this language because of the following reasons.
+\begin{itemize}
+  \item Complicated statements can become quite difficult to read, especially
+    for people who are not familiar with the types behind the language.
+  \item Although a language shouldn’t be based on natural language like in
+    iteration one, it is always good to be able to read out loud what a series
+    of statements does. We cannot do that in this language.
+  \item This language is heavily inspired by the structure of our problem
+    domain, and forces its users to also be aware of this structure.
+  \item The syntax of this language is very general. Without changing too much,
+    it could replace SQL for most queries, not just for our database structure
+    but for any database structure. This is not a good sign: GlobAir Inc.  is
+    dissatisfied with SQL, and wants us to create a \emph{different}
+    language.
+  \item Because queries can be nested indefinitely and statements have to have
+    access to information that is available on a higher level\footnote{For
+      example, to define a period we have need of a template to bind it to. In
+      the example, we do not specify the FLN of the periods we create, which
+      automatically assigns the FLN of the template we are creating on a higher
+      level to it.},
+    implementing this language would be very hard.
+\end{itemize}
+Some of the things we learned in this process are the following.
+\begin{itemize}
+  \item Consistency is important, but so is readability. The language in
+    iteration one focussed too much on readability, the language in iteration
+    two focussed too much on consistency.
+  \item We should try to forget about the database and problem domain structure,
+    and try to look trough the eyes of the user of our DSL.
+  \item We are dealing with a DSL; we should not be shy about introducing
+    language features and syntax that is only relevant for the specific problem
+    domain of AiryScript.
+\end{itemize}
 
 \subsubsection{Iteration three}
+The syntax of the third iteration is the final syntax of AiryScript. The next
+sections therefore discuss this syntax into full detail. This section provides a
+sneak-peak of what the syntax of AiryScript looks like.
+
+The following commands have the same effect as the code shown for iteration two.
+\begin{lstlisting}[language=airyscript,frame=single]
+  ADD CITY {name : Brussels}
+  ADD CITY {name : Edinburgh}
+  ADD AIRLINE {fln: Sab, name: Sabena}
+  ADD SEAT TYPE {economy}
+  ADD SEAT TYPE {business}
+  ADD SEAT TYPE {"first class"}
+  ADD AIRPLANE TYPE {
+      name: "Boeing 007"
+  } WITH SEATS [
+      {type: economy, amt: 100},
+      {type: business, amt: 20}
+  ]
+  ADD TEMPLATE {
+      fln: SAB888,
+      from: {name: Brussels},
+      to: {name: Edinburh},
+      airplaneType: {name: "Boeing 007"},
+  } WITH SEAT INSTANCES [
+      {type: economy, price: {dollar: 21}},
+      {type: business, price: {dollar: 34}}
+  ] AND WITH PERIODS [
+      {
+          from: {d: 25, m: 12, y: 2012},
+          to: {d: 9, m: 1, y: 2014},
+          departure: {h :12}
+      },{
+          from: {d: 15, m:  6, y: 2012},
+          to: {d: 9, m: 12, y: 2016},
+          departure: {h: 15, m:35}
+      }
+  ]
+  CHANGE SEAT INSTANCES OF FLIGHT {
+      template: {fln: SAB888},
+      during: {
+          from: { d: 15, m:  6, y: 2012 },
+          to: { d: 9, m: 12, y: 2016 },
+      }
+  } TO [
+    {type: business, price: {dollar: 268}},
+    {type: economy, price: {dollar: 370}}
+  ]
+\end{lstlisting}
+We believe this language is a healthy mix between elements from the languages in
+iteration one and two.
+\begin{itemize}
+  \item It is possible to read sentences out loud, just like in the language of
+    iteration one. The labels and commands in front of structures make them
+    quite readable.
+    
+    We believe that even without ever having seen a description of what the
+    different operations in our language do or having seen a
+    description of the syntax of our language, people familiar with the domain
+    of Section \ref{sec:domain} are capable of understanding what the code above
+    does.
+  \item The language is consistent, just like in iteration two. When provided
+    with the manual, users should quickly be able to start writing queries.
+  \item The language is quite robust. Lots of invalid queries produce parsing
+    errors.
+  \item Unlike the languages in iteration one and two, this language can be
+    implemented!
+\end{itemize}
+Note that this is actually a very bad example to show off the new syntax.  The
+old syntaxes still assumed a domain model where prices are linked to time
+periods. This new syntax uses the domain model that Section \ref{sec:domain}
+describes, and links prices to a template. We can still achieve the same pricing
+configuration by changing the prices of the flights over a specified time
+period, but this requires an additional operation.
 
 
-\subsection{Describing and creating types}
+\subsection{Describing and creating structures}
 \label{sec:syntax_spec}
 This section specifies how to create structures in AiryScript and explains the
 notation that Section \ref{sec:operations} uses to specify types. Even though
 AiryScript does not require its users to declare types or provide them with
-the possibility to define their own types, knowing how to describe these types
-and how the typing system of AiryScript works is important, since AiryScript is
-a typed language.
+the possibility to define their own types, knowing how to describe types and how
+the typing system of AiryScript works is important, since AiryScript is a typed
+language.
 
 \paragraph{Primitive types}
 AiryScript supports strings and integers as primitive types. The statements
@@ -34,8 +254,8 @@ define the integers 5 and 502349. The statements
   \tye{"I am not free of spaces and therefore I do require quotation"}\\
   \tye{"IAmFreeOfSpacesYetICanStillUseQuotation"}
 \end{quote}
-each define a string. Users should surround strings that contain spaces with
-quotation marks.
+each define a string. Users should surround strings that contain spaces and/or
+commas with quotation marks.
 
 
 \paragraph{Structures}
@@ -67,9 +287,10 @@ In the documentation,
 \end{quote}
 defines \ty{A} to be shorthand for the type that collects all structures that
 have properties named \tye{a} and \tye{b} with respective types \tye{Int} and
-\tye{String}. This simple definition completely describes a type. If AiryScript
-would allow users to define their own types and operations, this would be the
-syntax it would use.
+\tye{String}. Structures that define an \tye{Int} and a \tye{String} with
+different names do not belong to type \ty{A}. This simple definition completely
+describes a type. If AiryScript would allow users to define their own types and
+operations, this would be the syntax it would use.
 
 As an example, the following two lines each define a structure that is an
 instance of \ty{A}.
@@ -87,9 +308,9 @@ In the documentation,
 defines \ty{B} to be shorthand to the type that collects all structures that
 have properties named \tye{a} with type \ty{Int}, and that optionally has two
 more properties with names \tye{b} and \tye{c} and values with respective types
-\ty{Int} and \ty{String}. None of the structures that either have parameters
+\ty{Int} and \ty{String}. Structures that either have parameters
 with names different from \tye{a}, \tye{b} or \tye{c} or that have an \tye{a},
-\tye{b} or \tye{c} with a different type match \ty{B}.
+\tye{b} or \tye{c} with a different type do not belong to \ty{B}.
 
 As an example, all of the following lines define a structure that is an
 instance of \ty{B}.
@@ -100,7 +321,7 @@ instance of \ty{B}.
 \end{quote}
 
 \paragraph{Types of nested structures}
-The statement
+In the documentation,
 \begin{quote}
   \ty{C}\tye{ = \ins{a: B, b: String}}
 \end{quote}
@@ -118,7 +339,7 @@ As an example, the following line defines a structure that is an instance of
 \end{quote}
 
 \paragraph{Union types}
-The statement
+In the documentation,
 \begin{quote}
   \ty{D}\tye{ = A | B}
 \end{quote}
@@ -133,7 +354,48 @@ instance of \ty{D}.
 \end{quote}
 
 
-\subsection{Structural type system}
+\paragraph{Lists}
+In the documentation,
+\begin{quote}
+  \ty{E}\tye{ = [Int]}
+\end{quote}
+defines a type that contains a list of integers. List elements are separated
+by commas and defined within square brackets. Naturally, lists can also occur
+within structures. The ordering of elements in a list is preserved during
+interpretation; whether or not the ordering matters depends on the operation the
+list is passed to.
+
+As an example, the following two lines each define an instance of \ty{E}.
+\begin{quote}
+  \tye{[1,2,3,4]}\\
+  \tye{[   5 , 2,1,2]}
+\end{quote}
+
+
+\subsection{Type system}
+\label{sec:structural_type_system}
+This section describes the type system of AiryScript. Section
+\ref{sec:type_classification} classifies the type system into some categories
+that are well-known in computer science. Section \ref{sec:type_example} provides
+some examples to illustrate how the type system works.
+
+\subsubsection{Classification}
+\label{sec:type_classification}
+The type system of AiryScript is.
+\begin{description}
+  \item[Strongly typed] When AiryScript expects a parameter of type $T$, it is
+    not possible to provide it with another type. It is not possible to cast
+    values to another type, and there is no type that matches all types.
+  \item[Statically typed] AiryScript determines and checks types while parsing.
+  \item[Structural] Type compatibility and equivalence are determined by the
+    type’s actual structure or definition. Subtyping relations cannot be
+    declared explicitly but are created automatically by shared structure.
+  \item[Implicit] AiryScript never requires the user to explicitly declare any
+    types.
+\end{description}
+
+\subsubsection{Examples}
+\label{sec:type_examples}
 This section discusses the structural type system of AiryScript by providing an
 extended example.
 
@@ -181,170 +443,232 @@ AiryScript works.
     order of their properties.
 \end{itemize}
 
-\subsection{Operations}
-\label{sec:operations}
-\subsubsection{General types}
-The type system of AiryScript is.
+\subsection{Describing and calling operations}
+\label{sec:operations_spec}
+This section specifies how to perform operations in AiryScript and explains the
+notation that Section \ref{sec:operations} uses to specify operations.
+
+
+\paragraph{Basic operations}
+In the documentation,
+\begin{quote}
+  \tye{DO INTEGER <Int>}
+\end{quote}
+specifies an operation that takes an integer. Together with the operation
+signature, the documentation defines what an operation does. Users can call the
+function above in an AiryScript script file as
+\begin{quote}
+  \tye{DO INTEGER 5}
+  .
+\end{quote}
+It is also possible to write
+\begin{quote}
+  \tye{DO INTEGER \{5\}}
+  ;
+\end{quote}
+we leave it up to the user to decide which syntax he/she likes best.
+Of course, operations can also take structures as their arguments. Users can
+separate all parts by one or multiple spaces and/or newlines. For example,
+\begin{quote}
+\begin{verbatim}
+DO          INTEGER
+      5 DO INTEGER 10
+\end{verbatim}
+\end{quote}
+does what the user wants and performs the operation \tye{DO INTEGER} twice.
+Note that AiryScript does not require the user to put a semicolon at the end of
+an operation or between operations.
+AiryScript does not parse input like
+\begin{quote}
+  \tye{ADDINTEGERS 5 10} .
+\end{quote}
+
+\paragraph{Separated operations}
+Some operations in AiryScript take multiple arguments. Although AiryScript is
+capable of parsing input like
+\begin{quote}
+  \tye{DO STUFF TO DURING <Stuff> <Something> <Period>}
+  ,
+\end{quote}
+we believe this is not very legible. AiryScript’s operations are therefore
+usually split up like
+\begin{quote}
+  \tye{DO <Stuff> TO <Something> DURING <Period>}
+\end{quote}
+to increase legibility. Note that this really does define a \emph{single
+operation} that has access to three arguments (instances of \tye{Stuff},
+\tye{Something} and \tye{Period}) and not three operations (\tye{DO}, \tye{TO}
+and \tye{DURING}) that each operate on a single argument.
+
+The order of the keywords is fixed, so users are not able to write
+\begin{quote}
+  \tye{DO \{…\} DURING \{…\} TO \{…\}}
+  .
+\end{quote}
+
+AiryScript allows users to put spaces and newlines in between keywords, but we
+advise users to write legible code by keeping these kind of ‘separated
+operations’ together, and not separate them by newlines.
+
+
+%Operations in AiryScript are always capitalized.
+
+
+
+
+%\subsection{Though decisions}
+%\label{sec:though_decisions}
+%This section documents some of the tougher choices we had to make when designing
+%specific operations for the language. 
+%
+%This section often refers to actual operations in the language, but is not a
+%language description. See Section \ref{sec:operations} for a consistent and
+%complete overview of all operations and types.
+%
+%As is often the case with though choices, each possible decision has advantages
+%and disadvantages. We made choices only after several hours of discussion.
+
+\subsection{Protecting the user}
+\label{sec:protecting}
+This section explains our decision to prefer more powerful operations over more
+safe ones. We use the ‘change city’ operation as a simple example where the
+difference between powerful and safe is clearly visible.
+
+At some point in the design of the DSL, we have to decide on specific types and
+operations. For changing distances, we can come up with two possibilities that
+make perfect sense.
+
+\begin{center}
+\begin{tabular}{p{0.5\textwidth}p{0.5\textwidth}}
+  Approach one & Approach two \\\hline
+  \begin{lstlisting}
+Dist = {
+    ?from:Airport,
+    ?to: Airport,
+    ?dist:Int
+}
+Dist_data = {
+    from:Airport,
+    to: Airport,
+    dist:Int
+}
+
+CHANGE DISTANCE <Dist> TO <Dist>
+  \end{lstlisting} &
+  \begin{lstlisting}
+Dist = {
+    from:Airport,
+    to: Airport
+}
+Dist_data = {
+    from:Airport,
+    to: Airport,
+    dist:Int
+}
+
+
+CHANGE DISTANCE <Dist> TO <Int>
+  \end{lstlisting}
+\end{tabular}
+\end{center}
+The language syntax is expressive enough to be able to handle both approaches,
+but naturally we have to decide on only one.
+
+\paragraph{Approach one}
+defines a very general change operator that not only allows
+changing the distance of a single pair of airport, but also the \tye{from} and
+\tye{to} properties of existing pairs of airports or even groups of pairs of
+airports.
+
+The main advantage of this approach lies it its consistency.  We can use very
+similar operation definitions for changes to other types of data, for example
+\begin{quote}
+  \tye{CHANGE FLIGHTTIME <FlightTime> TO <FlightTime>}
+\end{quote}
+and
+\begin{quote}
+  \tye{CHANGE TEMPLATE <Template> TO <Template>}
+  ,
+\end{quote}
+which really means that we have a generic change operations.
+
+This is just a single example, but taking into consideration all types we can
+distinguish the following advantages and disadvantages.
 \begin{itemize}
-  \item Strongly typed: when AiryScript expects a parameter of type $T$, it is
-    not possible to provide it with another type. It is not possible to cast
-    values to another type, and there is no type that matches all types.
-  \item Statically typed: AiryScript determines and checks types at
-    compile-time.
-  \item Structural: type compatibility and equivalence are determined by the
-    type’s actual structure or definition. Even if 
-  \item Implicit: AiryScript never requires the user to explicitly declare any
-      types.
+  \item The advantage of this approach is that we have fairly few, simple
+    operations that are easy for users to learn. There is also the possibility
+    to execute very powerful queries.
+  \item The disadvantage of this approach is that it allows users to write
+    queries that are \emph{too} general. It allows users to execute
+    operations that do not make sense.
 \end{itemize}
 
+\paragraph{Approach two}
+defines a more restricted change distance operator that only allows changing
+single, existing distances between pairs of cities.
 
-\subsubsection{Basic types}
-\begin{description}
-  \item[\ty{Time}] \tye{= \{?h:Int (0), ?m:Int (0), ?s:Int (0)\}}
+Approach one allows users to execute queries like
+\begin{quote}
+  \tye{CHANGE DISTANCE {from: {name: Zaventem}} TO {dist: 1000}}
+\end{quote}
+or even
+\begin{quote}
+  \tye{CHANGE DISTANCE {dist: 5000} TO {dist: 1000}}
+  .
+\end{quote}
+The first query changes the distance of all flights that start from the Zaventem
+airport to 1000km, which of course only make sense as long as there is only one
+such distance in the database. The second query changes the distance between all
+pairs of cities with a distance of 5000km to a distance of 1000km. The main
+advantage of the second approach is therefore increased safety.
 
-    Specifies either a time period (e.g. a flight takes 5 hours) or a time of
-    day (e.g. a flight is at 13h).
-  \item[\ty{Date}] \tye{= \{d:Int, m:Int, y:Int\}}
+These are just examples, but taking into consideration all types we can
+distinguish the following advantages and disadvantages.
+\begin{itemize}
+  \item The advantage of this approach is increased safety for the users, as
+    they are no longer capable of destroying the contents of the database with a
+    single query.
+  \item The disadvantage of this approach is increased language complexity
+    for manipulating more complicated domain elements. We potentially
+    have to create a lot of different selection types and operations for the
+    different things we want to be able to change about these elements.
 
-    Specifies a date.
-  \item[\ty{DateTime}] \tye{= \{date:Date, ?time:Time (\{ \})\}}
+    Also, queries become less powerful. It is probably impossible to restrict
+    users so much that he cannot do anything wrong without imposing some
+    restrictions that are usually just irritating. For example, approach one
+    does not allow a user to rectify his or her mistake after entering a distance
+    between York Airport and Zaventem instead of New York and Zaventem: he has
+    to delete the mistake and add a new distance again. As another example,
+    allowing the user to specify prices for only a single flight at a time makes
+    the ‘change prices’ operation safer, but also less powerful.
+\end{itemize}
 
-    Specifies a specific point in time. 
-  \item[\ty{Price}] \tye{= \{?dollar:Int (0), ?cent:Int (0)\}}
-  \item[\ty{TimePeriod}] \tye{= \{from:DateTime, to:DateTime\}}
-\end{description}
+\paragraph{Our train of thought}
+While in the case of airports it is fairly easy to protect users from themselves
+by not allowing them to execute non-sensible queries, this is not the case for
+more complicated domain elements like flights or flight templates. We feel that
+if take approach two here, then this means that we take it upon ourselves to
+protect users from themselves like this for all types and operations, also the
+more complicated ones.
 
-\subsubsection{City}
-City types are
-\begin{description}
-  \item[\ty{City}] \tye{= \{?name: String\}}
-  \item[\ty{City\_data}] \tye{= \{name: String\}}
-\end{description}
-City operations are
+Because we saw that the number of types and operations that are necessary to
+prevent users from executing potentially disastrous queries on the database
+(approach two) is much greater than the number of types and operations necessary
+for approach one, we decided to take approach one for AiryScript. We think that
+this is usually something you have discuss with the client of the DSL. Which
+approach is best also heavily depends on the background of the users of
+AiryScript.
 
-
-\subsubsection{Airport}
-Airport types are
-\begin{description}
-  \item[\ty{Airport}] \tye{= \{?short:String,\\
-      ?name: String,\\
-      ?city:City\}}
-  \item[\ty{Airport\_data}] \tye{= \{short:String,\\
-      name: String,\\
-      city:City\}}
-\end{description}
-
-
-\subsubsection{Distance}
-Distance types are
-\begin{description}
-  \item[\ty{Dist}] \tye{= \{?from:City,\\
-      ?to:City,\\
-      ?dist:Int\}}
-  \item[\ty{Dist\_data}] \tye{= \{from:City,\\
-      to:City,\\
-      dist:Int\}}
-\end{description}
-
-\subsubsection{Flight time}
-Flight time types are
-\begin{description}
-  \item[\ty{FlightTime}] \tye{= \{?from:City,\\
-      ?to:city,\\
-      ?airplaneType:airplaneType,\\
-      ?duration:Time\}}
-  \item[\ty{FlightTime\_data}] \tye{= \{from:City,\\
-      to:city,\\
-      airplaneType:airplaneType,\\
-      duration:Time\}}
-\end{description}
-
-
-\subsubsection{Airplane type}
-Airplane type types are
-\begin{description}
-  \item[\ty{AirplaneType}] \tye{= \{?name:String\}}
-  \item[\ty{AirplaneType\_data}] \tye{= \{name:String, arrangement:[Seat\_data]\}}
-\end{description}
+\paragraph{AiryScript is still safer than SQL}
+While we give users access to powerful operations and do not protect them from
+filling up the database with nonsense, AiryScript certainly does aim to make it
+impossible for users to make data \emph{inconsistent}. This is the only
+requirement specified in the assignment. For example, it is impossible to create
+a template where an airplane type $t$ flies from city $a$ to city $b$ if there
+is no flight time available for the combination of $a$, $b$ and $t$. It is also
+impossible to delete a flight time for $a$, $b$, $t$ as long as there still
+exists a template that relies on it. Basically, AiryScript makes sure all the
+constraints specified in the domain of Section \ref{sec:domain} are kept.
 
 
-\subsubsection{Seats}
-Seat types are
-\begin{description}
-  \item[\ty{Seat}] \tye{= \{?number:Int, ?type:String\}}
-  \item[\ty{Seat\_data}] \tye{= \{?number:Int, ?amt:Int, type:String\}}
-\end{description}
-
-\subsubsection{Airline}
-\begin{description}
-  \item[\ty{Airline}] \tye{= \{?short:String, ?name:String\}}
-  \item[\ty{Airline\_data}] \tye{= \{short:String, name:String\}}
-\end{description}
-
-\subsubsection{Templates}
-\begin{description}
-  \item[\ty{Template}] \tye{= \{?fln:String,\\
-      ?airline:String,\\
-      ?from:City,\\
-      ?to:City,\\
-      ?airplaneType:AirplaneType\}}
-  \item[\ty{Template}] \tye{= \{fln:String,\\
-      airline:String,\\
-      from:City,\\
-      to:City,\\
-      airplaneType:AirplaneType,\\
-      prices:[SeatInstance\_data],\\
-      periods:[Period\_data]\}}
-\end{description}
-
-\subsubsection{Flights}
-\begin{description}
-  \item[Flight] \tye{= \{?template:Template,\\
-      departure:DateTime,\\
-      ?arrival:DateTime,\\
-      ?airplaneType:AirplaneType,\\
-      ?duringInterval:TimePeriod\}\\
-      | \\
-      \{?template:Template,\\
-      ?departure:DateTime,\\
-      arrival:DateTime,\\
-      ?airplaneType:AirplaneType,\\
-      ?duringInterval:TimePeriod\}\\
-      | \\
-      \{?template:Template,\\
-      ?departure:DateTime,\\
-      ?arrival:DateTime,\\
-      ?airplaneType:AirplaneType,\\
-      duringInterval:TimePeriod\}
-    }
-\end{description}
-
-\subsubsection{Period}
-\begin{description}
-  \item[\ty{ContainedPeriod}] \tye{= \{?from:Data, ?to:Date, ?day:Date\}}
-  \item[\ty{Period}] \tye{= \{?contained:ContainedPeriod,\\
-      ?from:Date,\\
-      ?to:Data,\\
-      ?day:String,\\
-      ?startTime:Time\}}
-  \item[\ty{Period\_data}] \tye{= \{?from:Date,\\
-      ?to:Data,\\
-      ?weekday:String,\\
-      startTime:Time\}}
-\end{description}
-
-
-\subsubsection{Seat instances}
-\begin{description}
-  \item[\ty{SeatInstance}] \tye{= \{number:Int,\\
-      ?amt:Int\} \\
-      | \\
-      \{type: String\}}
-  \item[\ty{SeatInstance\_data}]  \tye{= \{number:Int,\\
-      ?amt:Int,\\
-      price:Price\}\\
-      | \\
-      \{type:String,\\
-      price:Price\}}
-\end{description}
-
+\input{operations}

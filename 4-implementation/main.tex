@@ -1,5 +1,25 @@
 \section{Implementation}
 
+\subsection{Picking a programming language}
+We decided to program AiryScript in Scala fairly early on for the following
+reasons.
+\begin{itemize}
+  \item We wanted to be able to really define our own language syntax.
+    Generally, this means having our own parser and not merely calling ‘eval’ in
+    some other language. Also, all of the members of our team prefer typed
+    languages. Therefore, we also wanted to create a typed language. We could
+    not see how to do this without making our own parser. We were already in
+    possession of some basic parser code for Scala.
+  \item Some of the members of our team were already familiar with Scala.
+  \item All of the members of our team were already familiar with Java, which
+    makes it fairly easy to learn (the very basics of) Scala.
+  \item Scala has very good support for pattern matching through case classes
+    (i.e. tagged unions). We make extensive use of this in our code.
+  \item Some of the members of our team had been looking for a good opportunity
+    to get to know Scala for some time.
+\end{itemize}
+
+
 \subsection{Implementation overview}
 
 We divided the implementation in 3 parts:

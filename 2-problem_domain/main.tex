@@ -64,101 +64,114 @@ functionality that is not specified in the original assignment.
 \label{sec:additional_decisions}
 When implementing AiryScript, we also made some decisions that we did not
 discuss with the domain expert.
-\begin{itemize}
 
-  \item The original domain description is not specific on how elaborate
-    descriptions of new flights can be. The assignment describes flight
-    templates that correspond to weekly recurring flights. The assignment also
-    hints that there can also be individual, non-recurring flights and that the
-    number of flights.
-    
-    AiryScript supports defining single flights and weekly flight patterns,
-    possibly with multiple flying days per week and multiple flights per day. It
-    also supports specifying multiple, possibly disconnected time periods over
-    which the flight pattern is valid.
-    
-    This means that users can make statements like the following.
-    \begin{quote}
-      There is a flight every Monday at 13:00 and Friday at 17:30 starting from
-      August 2013 and ending at September 2013. Starting from October 2013 and
-      until the end of times, only the flight on Monday remains.
-    \end{quote}
-    This also means that users cannot specify a flight pattern occurring every
-    third Friday of the month.
-    
-    AiryScript supports manually adding flights to flight codes. In this
-    way, exceptional one-time only flights do not require modifying the flight
-    that corresponds to the flight code. Also, users who really want to
-    schedule flights each third Friday of the month can use this functionality
-    to manually add flights.
+\paragraph{Describing time periods}
+The original domain description is not specific on how elaborate
+descriptions of new flights can be. The assignment describes flight
+templates that correspond to weekly recurring flights. The assignment also
+hints that there can also be individual, non-recurring flights and that the
+number of flights.
 
-  \item AiryScript supports changing the prices of individual seats of
-    individual flights and the prices of flight templates, possibly only over a
-    specified period. Users can also use seat types to specify groups of seats
-    for which to change the price; these seat types are specified by the type of
-    airplane.
+AiryScript supports defining single flights and weekly flight patterns,
+possibly with multiple flying days per week and multiple flights per day. It
+also supports specifying multiple, possibly disconnected time periods over
+which the flight pattern is valid.
 
-    Binding seat types to airplanes has advantages and disadvantages. The
-    greatest advantage is that users can use seat types to specify prices on a
-    newly created flight, without first having to specify how many seats
-    there are for each type of seat. Also, usually different seat types actually
-    map to different types of seats, like seats with extra leg space. The
-    greatest disadvantage is that it currently makes it impossible to specify
-    additional pricing groups that are valid only for a specific flight.
+This means that users can make statements like the following.
+\begin{quote}
+  There is a flight every Monday at 13:00 and Friday at 17:30 starting from
+  August 2013 and ending at September 2013. Starting from October 2013 and
+  until the end of times, only the flight on Monday remains.
+\end{quote}
+This also means that users cannot specify a flight pattern occurring every
+third Friday of the month.
 
-    We feel that the advantages of binding seat types to airplane types outweigh
-    its disadvantages. Users can still specify any prices they want, because
-    they can change prices of individual seats. If required, it would also
-    certainly be possible to provide names for groups of seats that are tied to
-    individual flights or flight templates.
+AiryScript supports manually adding flights to flight codes. In this
+way, exceptional one-time only flights do not require modifying the flight
+that corresponds to the flight code. Also, users who really want to
+schedule flights each third Friday of the month can use this functionality
+to manually add flights.
 
-    AiryScript does not support changing prices as a function of time.
+\paragraph{Specifying prices}
+AiryScript supports changing the prices of individual seats of individual
+flights and the prices of flight templates, possibly only over a specified
+period. Users can also use seat types to specify groups of seats for which to
+change the price; these seat types are specified by the type of airplane.
 
-  \item AiryScript always requires users to specify an airplane type when
-    creating individual flights or flight templates.
+Binding seat types to airplanes has advantages and disadvantages. The greatest
+advantage is that users can use seat types to specify prices on a newly created
+flight, without first having to specify how many seats there are for each type
+of seat. Also, usually different seat types actually map to different types of
+seats, like seats with extra leg space. The greatest disadvantage is that it
+currently makes it impossible to specify additional pricing groups that are
+valid only for a specific flight.
 
-    We believe this restriction is justified, because AiryScript supports
-    changing the airplane type of a flight after its creation. If a user really
-    has no idea of the type of airplane that is used for the flight he is
-    inserting, he or she can create a dummy airplane.
+We feel that the advantages of binding seat types to airplane types outweigh its
+disadvantages. Users can still specify any prices they want, because they can
+change prices of individual seats. If required, it would also certainly be
+possible to provide names for groups of seats that are tied to individual
+flights or flight templates.
 
-    When creating a dummy airplane, a user should configure it
-    with sensible seating information. Special care should be given to seat
-    types, because otherwise changing airplane types could go wrong. The next
-    bullet point provides more information.
+AiryScript does not support changing prices as a function of time.
 
-  \item AiryScript provides support for changing airplane types, but it is very
-    basic. Since we keep track of prices of individual seats and not just seat
-    types, it is not generally possible to change airplane type without
-    requiring some additional information.
+\paragraph{Mandatory airplane type}
+AiryScript always requires users to specify an airplane type when creating
+individual flights or flight templates.
 
-    When changing to a smaller airplane, pricing information is inevitably lost.
-    AiryScript cannot know which prices the user wants to keep: the highest
-    prices, the lowest prices, the highest prices after matching seat types, if
-    that is even possible? Even when changing the airplane type to a type that
-    has more seats of every type, there are several policies we could use to set
-    the price of the surplus seats.  AiryScript could provide syntax that lets
-    the user specify the conversion policy it should use, but as AiryScript is,
-    at this point, a proof of concept, it does not currently support such
-    syntax.
+We believe this restriction is justified, because AiryScript supports changing
+the airplane type of a flight after its creation. If a user really has no idea
+of the type of airplane that is used for the flight he is inserting, he or she
+can create a dummy airplane.
 
-    Instead, AiryScript sets the prices of all seats with seat type $t$ in the
-    new airplane type to the same price: the price of the seat in the old
-    airplane with seat type $t$ that has the lowest seat number. If the old
-    airplane has no seats of type $t$, it sets the price to the price of least
-    expensive seat on the old airplane.
+When creating a dummy airplane, a user should configure it with sensible seating
+information. Special care should be given to seat types, because otherwise
+changing airplane types could go wrong. The next bullet point provides more
+information.
 
-    Note that in the common case in which the new and the old airplane only
-    contain seats of common seat types and all seats of the same type have the
-    same price, this method works as expected. All seats of type $t$ in the new
-    airplane will have the same price as the seats of type $t$ in the old
-    airplane.
 
-    We believe our approach here is justified. The rule above covers the only
-    case where there is an obvious best price conversion policy. If a user is
-    unsatisfied with the default conversion rule, he can always respecify prices
-    after conversion. No policy can always save you from this.
-\end{itemize}
+\paragraph{Changing airplane type}
+AiryScript provides support for changing
+airplane types, but it is very basic. Since we keep track of prices of
+individual seats and not just seat types, it is not generally possible to change
+airplane type without requiring some additional information.
+
+When changing to a smaller airplane, pricing information is inevitably lost.
+AiryScript cannot know which prices the user wants to keep: the highest prices,
+the lowest prices, the highest prices after matching seat types, if that is even
+possible? Even when changing the airplane type to a type that has more seats of
+every type, there are several policies we could use to set the price of the
+surplus seats.  AiryScript could provide syntax that lets the user specify the
+conversion policy it should use, but as AiryScript is, at this point, a proof of
+concept, it does not currently support such syntax.
+
+Instead, AiryScript sets the prices of all seats with seat type $t$ in the new
+airplane type to the same price: the price of the seat in the old airplane with
+seat type $t$ that has the lowest seat number. If the old airplane has no seats
+of type $t$, it sets the price to the price of least expensive seat on the old
+airplane.
+
+Note that in the common case in which the new and the old airplane only contain
+seats of common seat types and all seats of the same type have the same price,
+this method works as expected. All seats of type $t$ in the new airplane will
+have the same price as the seats of type $t$ in the old airplane.
+
+We believe our approach here is justified. The rule above covers the only case
+where there is an obvious best price conversion policy. If a user is unsatisfied
+with the default conversion rule, he can always respecify prices after
+conversion. No policy can always save you from this.
+
+\paragraph{Identifying cities}
+Even though there can be multiple cities with the same name (e.g. 13
+cities, 11 towns and 14 townships in the USA are called Springfield),
+AiryScript uses a cities name as its identifier. This means that it is not
+possible to insert two cities called "Springfield" into the database.
+
+Changing this would be easy, and would involve adding properties to cities
+until it becomes possible to uniquely identify all cities, like the country
+and province the city is located in.  We would then have to provide
+additional operations to add countries and provinces. We left this out
+because we believe this is not very important at this stage of AiryScript’s
+development.
 
 
 \subsection{Domain analysis}
@@ -193,30 +206,28 @@ AiryScript.
 
 \begin{description}
   \item[\dbf{City}] instances correspond to a city, e.g. the City of New York. A
-    city has a name and is bound to several airports.
+    city is identified by its name and is bound to several airports.
 
-    Since there can be multiple cities with the same name (e.g. 13 cities, 11
-    towns and 14 townships in the USA are called Springfield), we do not use
-    \dbf{name} as the identifier of city.
-
-  \item[\dbf{Airport}] instances correspond to an airport. Airports are identified by a
-    three-character code, have a name and are situated in a city. AiryScript
-    records flight times and distances between some pairs of airports. 
+  \item[\dbf{Airport}] instances correspond to an airport. Airports are
+    identified by a three-character code, have a name that is not necessarily
+    unique and are situated in a city. AiryScript records flight times and
+    distances between some pairs of airports. 
     
     Note that there can be multiple airports in the same city, to cover cases
     like the Newark and JFK airports in the City of New York.
 
   \item[\dbf{Distance}] corresponds to the distance in between two airports.
-    Note AiryScript does not assume the distance from airport $a$ to airport $b$
-    to be equal to the distance from airport $b$ to airport $a$.
+    Note that AiryScript does not assume the distance from airport $a$ to
+    airport $b$ to be equal to the distance from airport $b$ to airport $a$.
 
     There does not necessarily have to be a \dbf{Distance} entry for every pair
     of airports in \dbf{Airport}, but there has to be such an entry for all
-    pairs of airports for which there are flights. This is enforced when users
-    try to define new templates or change templates (also see \dbf{Template}).
+    pairs of airports for which there are flights.
+    %This is enforced when users try to define new templates or change templates
+    %(also see \dbf{Template}).
 
-  \item[\dbf{FlightTime}] instances correspond to the flight time in between to airports
-    for a specific type of aircraft.
+  \item[\dbf{FlightTime}] instances correspond to the flight time in between to
+    airports for a specific type of aircraft.
     
     We do not merge distance and flight time because this violates 2NF
     normalization: unlike flight time, distance is not dependent on the type of
@@ -224,63 +235,78 @@ AiryScript.
 
     There does not necessarily have to be a \dbf{FlightTime} entry for all
     combinations of types of airplanes and pairs of airports, but there has to
-    be an entry for all such combinations for which there are flights. This is
-    enforced when users try to define new templates or change templats (also see
-    \dbf{Template}).
+    be an entry for all such combinations for which there are flights.
+    %This is
+    %enforced when users try to define new templates or change templates.
+    %Also see \dbf{Template}.
 
-  \item[\dbf{AirplaneType}] instances correspond to a specific type of airplane, e.g.
-    Boeing 727. An airplane type consists of a name and is bound to several
-    seats. We say that an airplane type $t$ ‘has’ $n$ seats if there are $n$
-    instances of \dbf{Seat} linked to $t$.
+  \item[\dbf{AirplaneType}] instances correspond to a specific type of airplane,
+    e.g.  Boeing 727. An airplane type consists of a name and is bound to
+    several seats. We say that an airplane type $t$ ‘has’ $n$ seats if there are
+    $n$ instances of \dbf{Seat} linked to $t$.
 
     Note that AiryScript does not keep track of individual airplanes.
 
-  \item[\dbf{Seat}] instances correspond to a specific seat on a type of airplane. Note
-    that \dbf{Seat} does \emph{not} correspond to a single seat, as there can be
-    multiple airplanes of the same type. The only property of a seat is its seat
-    type.
+  \item[\dbf{Seat}] instances correspond to a specific seat on a type of
+    airplane $t$. Note that \dbf{Seat} does \emph{not} correspond to a single
+    seat, as there can be multiple airplanes of the same type. The only property
+    of a seat is its seat type.
 
-    Each seat is bound to a instances of \dbf{SeatInstance} for every flight or
-    template. Instance of \dbf{SeatInstance} can correspond to actual physical
+    For every flight with an airplane of type $t$, each seat of the airplane is
+    bound to an instance of \dbf{SeatInstance}.
+    Instance of \dbf{SeatInstance} therefore correspond to actual physical
     seats.
+
+    For every flight template $T$ with an airplane type $t$, each seat of the
+    airplane type is bound to an instance of \dbf{SeatInstanceTemplate}. The
+    values of \dbf{SeatInstanceTemplate} are used to initialize flights that
+    have $T$ as their template.
 
   \item[\dbf{SeatType}] instances correspond to a type of seat. Examples of seat
     types include business, first class and economic seats. The user is free to
     make as much seat types as he or she wants.
 
     Seat types consist of disjoint groups of seats and are linked to airplane
-    types. We advise users to set seat types so that seats with different seat
-    types correspond to different types of seat in the real world and vice
-    versa.
+    types. We advise users to define \dbf{SeatType} instances so that \dbf{Seat}
+    instances bound to different instances of \dbf{SeatType} correspond to
+    different types of seats in the real world and vice versa.
     
     Seat types group seats, and AiryScript uses these groups to set prices and
     to convert prices when the user changes the airplane type of flights, as
     described in section \ref{sec:additional_decisions}.
 
-  \item[\dbf{AirlineCompany}] instances correspond to airline companies. Airline
-    companies are identified by a three-character code and have a name.
+  \item[\dbf{Airline}] instances correspond to airlines. Airlines are identified
+    by a three-character code and have a name.
 
-    Each airline company can be linked to several flight templates. Those flight
+    Each airline can be linked to several flight templates. Those flight
     templates are in turn linked to flights. In this way, airline companies are
     linked to flights.
 
-  \item[\dbf{Template}] instances describe a flight template, the most
-    complicated domain element modeled by AiryScript. A flight template is
-    identified by a FLN (FLight Number), which consists of the airline code
-    followed by three or four digits.
+  \item[\dbf{Template}] instances $T$ describe a flight template, which is
+    probably the most complicated domain element modeled by AiryScript. A flight
+    template is identified by a FLN (FLight Number), which consists of the
+    airline code followed by three or four digits.
     
     \begin{itemize}
-      \item Templates specify an origin and destination city.  AiryScript
-        refuses to add templates with or change templates to couples of cities
-        and airplane types for which there are no \dbf{Distance} and
-        \dbf{FlightTime} instances.  Because of this, \dbf{Template} instances
-        are guaranteed to have access to distance and flight time information.
-      \item Templates specify an airplane type.
-      \item A template describes when flights occur through \dbf{Period}
+      \item $T$ specifies an origin $a$ and destination airport $b$ and an
+        airplane type $t$. There should always be a \dbf{Distance} instance that
+        corresponds to $a$ and $b$ and a \dbf{FlightTime} instance that
+        corresponds to $a$, $b$ and $t$.
+        %AiryScript
+        %refuses to add templates with or change templates to have couples of
+        %airports and airplane types for which there are no \dbf{Distance} and
+        %\dbf{FlightTime} instances. Because of this, \dbf{Template} instances
+        %are guaranteed to have access to distance and flight time information.
+      \item $T$ describes when flights occur through \dbf{Period}
         instances. More information is in the description of \dbf{Period}.
-      \item Each template has as much seat instances as there are seats in its
-        airplane type.
+      \item For every seat $s$ in $t$, there is an instance of
+        \dbf{SeatInstanceTemplate} bound to $s$ and the $T$. These instances are
+        used as default values for \dbf{SeatInstance} instances that are bound
+        to flights created from $T$.
     \end{itemize}
+    
+    Templates often define, together with their period instances, an infinite
+    number of flights.
 
     Whenever necessary, AiryScript automatically instantiates flights from a
     flight template. This process is transparent to the user, so that for all
@@ -346,15 +372,15 @@ AiryScript.
     day at the specified hour starting from the starting time until the end of
     times.
 
-    Optionally, users can attach an end time in addition to a start time. In
-    this way he or she defines a time period, for example the time period in
-    between 11/1/2013 and 11/2/2013. $p$ is then only valid over that time
-    period. When not specifying any other properties besides the hour, $p$
-    specifies a flight that takes off every day during the time period, for
-    example every day between 11/1/2013 and 11/2/2013 (inclusive).
+    Optionally, $p$ can contain an end time in addition to a start time. In this
+    way $p$ defines a time period, for example the time period in between
+    11/1/2013 and 11/2/2013. $p$ is then only valid over that time period. When
+    not specifying any other properties besides the hour, $p$ specifies a flight
+    that takes off every day during the time period, for example every day
+    between 11/1/2013 and 11/2/2013 (inclusive).
 
     Optionally, we can also attach a day to $p$. $p$ is then not valid every
-    day of the week, but only during the specified day.
+    day of the week, but only during the specified day of the week.
 
     As an example, take the period with properties \dbf{fromDate} = 11/1/2013,
     \dbf{toDate} = 11/2/2013, \dbf{day} = monday and \dbf{flightStartTime} =

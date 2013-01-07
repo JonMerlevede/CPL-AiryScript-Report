@@ -1,0 +1,588 @@
+\section{Types and operations}
+\label{sec:operations}
+
+\subsection{Basic types}
+\begin{description}
+  \item[\ty{Time}] \tye{= \{?h:Int, ?m:Int, ?s:Int\}}
+
+    Specifies either a time period or point in time where \tye{h} stands for the
+    number of hours, \tye{m} for the number of minutes and \tye{s} for the
+    number of seconds. The default value of all properties is zero.
+  \item[\ty{Date}] \tye{= \{d:Int, m:Int, y:Int\}}
+
+    Specifies a date. \tye{d} stands for the day, \tye{m} for the month and
+    \tye{y} for the year.
+  \item[\ty{DateTime}] \tye{= \{date:Date, ?time:Time\}}
+
+    Specifies a specific point in time. The default value for the time is at
+    midnight.
+  \item[\ty{Price}] \tye{= \{?dollar:Int, ?cent:Int\} | \{?euro:Int, ?cent:Int\}}
+
+    Specifies an amount of money in either dollar or euros. The default value of
+    all properties is zero.
+  \item[\ty{TimePeriod}] \tye{= \{from:DateTime, to:DateTime\}}
+
+    Specifies the time period in between the points in time defined by
+    \tye{from} and \tye{to}.
+\end{description}
+
+\subsection{City}
+\subsubsection{Types}
+City types are
+\begin{description}
+  \item[\ty{City}] \tye{= \{?name: String\}}
+  \item[\ty{City\_data}] \tye{= \{name: String\}}
+\end{description}
+where \tye{name} specifies the name of the city. 
+
+\subsubsection{Operations}
+City operations are
+\paragraph{Adding a city}
+\begin{quote}
+  \lstinline{ADD CITY <data:City_data>}
+\end{quote}
+Adds the city specified by \tye{data}.
+
+\begin{texa}[add the city of New York.]
+  \lstinline|ADD CITY {name: "New York"}|
+\end{texa}
+
+\paragraph{Changing a city}
+  \begin{quote}
+    \lstinline|CHANGE CITY <citySelector:City> TO <cityChange:City>|
+  \end{quote}
+Changes the city or cities specified by \tye{citySelector} to have the values
+specified by \tye{cityChange}.
+
+\begin{texa}[change the name of the city of New York to York.]
+  \lstinline|CHANGE CITY { name: "New York" } TO { name: "York" }|
+\end{texa}
+
+\paragraph{Removing a city}
+\begin{quote}
+  \lstinline{REMOVE CITY <selector:City>}
+\end{quote}
+Removes the city or cities specified by \tye{selector}.
+
+\begin{texa}[remove the city York.]
+  \lstinline|REMOVE CITY {name: "York"}|
+\end{texa}
+
+
+\subsection{Airport}
+\subsubsection{Types}
+Airport types are
+\begin{description}
+  \item[\ty{Airport}] \tye{= \{?short:String,\\
+      ?name: String,\\
+      ?city:City\}}
+  \item[\ty{Airport\_data}] \tye{= \{short:String,\\
+      name: String,\\
+      city:City\}}
+\end{description}
+where
+\begin{itemize}
+  \item \tye{short} stands for the short code airlines use internally to
+    represent airports.
+  \item \tye{name} stands for the full-length name of the airport.
+  \item \tye{city} stands for the city the airport is situated in.
+\end{itemize}
+\subsubsection{Operations}
+Airport operations are
+\paragraph{Adding an airport}
+\begin{quote}
+  \lstinline{ADD AIRPORT <data:Airport\_data>}
+\end{quote}
+Adds the airport specified by \tye{data}.
+\begin{texa}[add JFK Airport to the city of New York.]
+  \lstinline|ADD AIRPORT {short: JFK, name:"JFK Airport", city: {name: "York"}}|
+\end{texa}
+
+\paragraph{Changing an airport}
+\begin{quote}
+  \lstinline{CHANGE AIRPORT <selector:Airport> TO <change:Airport>}
+\end{quote}
+Changes the airport or airports specified by \tye{selector} to have the values
+specified by
+\tye{change}.
+\begin{texa}[change JFK Airport to be in the city of York.]
+  \lstinline|CHANGE AIRPORT {short: JFK} TO {city: {name: "York"}}|
+\end{texa}
+
+\paragraph{Removing an airport}
+\begin{quote}
+  \lstinline{REMOVE AIRPORT <Airport>}
+\end{quote}
+Removes the airport or airports specified by \tye{selector}.
+\begin{texa}[remove JFK Airport.]
+  \lstinline|REMOVE AIRPORT {short: JFK}|
+\end{texa}
+
+\subsection{Distance}
+\subsubsection{Types}
+Distance types are
+\begin{description}
+  \item[\ty{Distance}] \tye{= \{?from:Airport,\\
+      ?to:Airport,\\
+      ?dist:Int\}}
+  \item[\ty{Distance\_data}] \tye{= \{from:Airport,\\
+      to:Airport,\\
+      dist:Int\}}
+\end{description}
+where \tye{dist} is the distance of the flight trajectory from \tye{from} to
+\tye{to}.
+\subsubsection{Operations}
+Distance operations are as follows.
+
+\paragraph{Adding a distance}
+\begin{quote}
+  \lstinline{ADD DISTANCE <data:Distance_data>}
+\end{quote}
+Adds the distance specified by \tye{data}.
+\paragraph{Changing a distance}
+\begin{quote}
+  \lstinline{CHANGE DISTANCE <selector:Distance> TO <change:Distance>}
+\end{quote}
+Changes the distances specified by \tye{selector} to have the values specified
+by \tye{change}.
+\paragraph{Removing a distance}
+\begin{quote}
+  \lstinline{REMOVE DISTANCE <selector:Distance>}
+\end{quote}
+Removes the distance specified by \tye{selector}.
+
+\subsection{Flight time}
+\subsubsection{Types}
+Flight time types are
+\begin{description}
+  \item[\ty{FlightTime}] \tye{= \{?from:Airport,\\
+      ?to:Airport,\\
+      ?airplaneType:airplaneType,\\
+      ?time:Time\}}
+  \item[\ty{FlightTime\_data}] \tye{= \{from:Airport,\\
+      to:Airport,\\
+      airplaneType:airplaneType,\\
+      time:Time\}}
+\end{description}
+where \tye{time} is the time it takes an airplane of type \tye{airplaneType}
+to travel from \tye{from} to \tye{to}.
+
+\subsubsection{Operations}
+Flight time operations are as follows.
+
+\paragraph{Adding a flight time}
+\begin{quote}
+  \lstinline{ADD FLIGHT TIME <data:FlightTime_data>}
+\end{quote}
+Adds the flight time specified by \tye{data}.
+
+\paragraph{Changing a flight time}
+\begin{quote}
+  \lstinline{CHANGE FLIGHT TIME <selector:FlightTime> TO <change:FlightTime>}
+\end{quote}
+Changes the flight time or flight times specified by \tye{selector} to have the
+values specified by \tye{change}.
+
+\paragraph{Removing a flight time}
+\begin{quote}
+  \lstinline{REMOVE FLIGHT TIME <selector:FlightTime>}
+\end{quote}
+Removes the flight time or flight times specified by \tye{selector}.
+
+
+\subsection{Airplane type}
+\subsubsection{Types}
+Airplane type types are
+\begin{description}
+  \item[\ty{AirplaneType}] \tye{= \{?name:String\}}
+  \item[\ty{AirplaneType\_data}] \tye{= \{name:String\}}
+\end{description}
+where \tye{name} is the name of the airplane type specified by an instance of
+
+There are also seats in airplanes. Seat types are
+\begin{description}
+  \item[\ty{SeatType}] \tye{= String}
+  \item[\ty{Seat}] \tye{= \{?number:Int, ?type:SeatType\}}
+  \item[\ty{Seat\_remove}] \tye{= \{?number:Int, ?amt:Int, ?type:SeatType\}}
+  \item[\ty{Seat\_data}] \tye{= \{?number:Int, ?amt:Int, type:SeatType\}}
+\end{description}
+where \ty{SeatType} represents a seat type and a \ty{Seat} represents a seat in
+an airplane type.
+
+\subsubsection{Operations}
+Seat numbers have to be unique within an airplane type, but do not have to be
+continuous (i.e. there can be a seat with number $n$ even if not all the seats
+from 1 to $n-1$ exist). Overlapping seat numbers will cause any of the
+operations below to throw an error.
+
+\paragraph{Adding an airplane type}
+\begin{quote}
+\begin{lstlisting}
+ADD AIRPLANE TYPE <data:AirplaneType_data>
+WITH SEATS <seats:[Seat_data]>
+\end{lstlisting}
+\end{quote}
+Adds the airplane type specified by \tye{data} with the seat arrangement
+specified in \tye{seats}. For each element in \ty{Seat\_data}, AiryScript adds
+the amount of seats specified by \tye{amt} of the type specified by \tye{type},
+starting numbering at the seat number specified by \tye{number}.  The default
+value for \tye{amt} is one, the default value of \tye{number} is equal to the
+highest seat number so far plus one. AiryScript processes the seats in the order
+they appear in the \tye{seats} list.
+
+
+\begin{texa}[
+Adds an airplane type with the name ‘Boeing 007’.
+The airplane type has 100 seats: 10 first class seats, 20 business seats
+and 70 economy seats. We assume these seat types already exist. The first class
+seats are numbered from 1 to 10 (inclusive), the business seats are numbered 51
+to 70 (inclusive) and the economy class seats are numbered from 11 to 50
+(inclusive) and 71 to 100 (inclusive).
+  ]
+  {
+\begin{lstlisting}
+ADD AIRPLANE TYPE {
+    name: "Boeing 007",
+} WITH SEATS [
+    {type: first, amt: 10},
+    {type: business, number:51, amt: 20},
+    {type: economy, amt: 40},
+    {type: economy, amt: 30}
+]
+\end{lstlisting}
+  }
+\end{texa}
+
+\paragraph{Adding seats to an airplane type}
+\begin{quote}
+  \begin{lstlisting}
+ADD SEATS <datas:[Seat_data]>
+TO AIRPLANE TYPE <airplaneSelector:AirplaneType>
+  \end{lstlisting}
+\end{quote}
+Adds all of the seats specified by \tye{datas} to the airplane or airplanes
+matched by \tye{airplaneSelector}.
+
+\paragraph{Changing an airplane type}
+\begin{quote}
+  \lstinline|CHANGE AIRPLANE TYPE <selector:AirplaneType> TO <change:AirplaneType>|
+\end{quote}
+Changes the airplane type or airplane types specified by \tye{selector} to have
+the values specified by \tye{change}.
+%\begin{texa}[Changes the name of the ‘Boeing 007’ airplane to ‘Boeing 666’.]
+%  {
+%    \begin{lstlisting}
+%CHANGE AIRPLANE TYPE {
+%  name: "Boeing 007"
+%} TO {
+%  name: "Boeing 666"
+%}
+%      \end{lstlisting}
+%  }
+%\end{texa}
+
+\paragraph{Changing seats of an airplane type}
+\begin{quote}
+  \begin{lstlisting}
+CHANGE SEATS <seatSelectors:[Seat]>
+OF AIRPLANE TYPE <airplaneSelector:AirplaneType>
+TO <change:Seat>
+  \end{lstlisting}
+\end{quote}
+Changes the seat or seats selected that match any of the seat selectors in
+\tye{seatSelectors} and the airplane selector \tye{airplaneSelector} to have the
+values specified in \tye{change}.
+%\begin{itemize}
+%  \item If any of the seat selectors in \tye{seatSelector} specifies a seat
+%    number $n$, that seat selector selects the (single) seat with number $n$,
+%    unless it specifies a seat type that does not match the type of seat $n$.
+%  \item
+If \tye{change} specifies a seat number $n$ and $m$ seats are selected,
+the selected seat with the lowest number gets seat number $n$, the selected
+seat with the second lowest number gets seat number $n+1$ and so on. If any
+of the seat numbers in the range $[n,n+m-1]$ are already taken, the
+operation is unsuccesful and does not change any seats.
+%\end{itemize}
+
+Note that the change seats operation is currently capable of merging seat types,
+but not of changing the number of seats in seat types. This effect can be
+achieved by adding and removing seats or by redefining the entire seat
+arrangement of the airplane type.
+
+\begin{texa}[Changes the Boeing 007 from ‘Adding an airplane type’ to have three
+  more business seats: seats number one and three (which used to be first class
+seats) and seat number 100 (which used to be an economy seat)]
+  {
+  \begin{lstlisting}
+CHANGE SEATS [
+  {number: 1}, {number: 3}, {number: 100}
+] OF AIRPLANE TYPE {
+  name: "Boeing 007"
+} TO {
+  type: business
+}
+  \end{lstlisting}
+  }
+\end{texa}
+
+\paragraph{Changing all the seats of an airplane type}
+\begin{quote}
+  \begin{lstlisting}
+CHANGE SEATS OF AIRPLANE TYPE <airplaneSelector:AirplaneType>
+TO <data:[Seat_data]>
+  \end{lstlisting}
+\end{quote}
+Changes the seats of the airplane type or airplane types selected by
+\tye{airplaneSelector} to the arrangement specified by \tye{data}. Data is
+processed like when first creating the airplane type.
+
+This operation is syntactic sugar for first removing all the seats of the
+airplane type, and then adding seats using \tye{data}.
+
+\paragraph{Removing an airplane type}
+\begin{quote}
+  \lstinline|REMOVE AIRPLANE TYPE <selector:AirplaneType>|
+\end{quote}
+Removes the airplane type(s) specified by \tye{selector}. 
+
+\paragraph{Removing seats from an airplane type}
+\begin{quote}
+  \begin{lstlisting}
+REMOVE SEAT <seatSelector:Seat_remove>
+FROM AIRPLANE TYPE <airplaneSelector:AirplaneType>
+  \end{lstlisting}
+\end{quote}
+Removes the seat(s) matched by \tye{seatSelector} from the airplane type(s)
+matched by \tye{airplaneSelector}.
+
+\tye{amt} specifies the maximum number of seats to remove. If \tye{number} is
+not specified but \tye{amt} is, AiryScript deletes the seats with the highest
+seat numbers that match \tye{seatSelector}.
+
+\begin{texa}[Removes ten business seats from the Boeing 007 as it is defined in
+    ‘Adding an airplane type’. After this operation, the Boeing still contains
+    first class seats numbered 1 to 10 and economy seats numbered 11 to 50 and
+    71 to 100, but only the business seats that are numbered 51 to 60 remain;
+  the seats numbered 61 to 70 are gone.]
+  {
+  \begin{lstlisting}
+REMOVE SEATS [
+  {amt: 10, type: economy}
+] FROM AIRPLANE TYPE {
+  name: "Boeing 007"
+}
+\end{lstlisting}
+  }
+\end{texa}
+
+
+\subsection{Seats}
+\subsubsection{Types}
+\subsubsection{Operations}
+\paragraph{Adding seats} (to an airplane type)
+\begin{quote}
+  \tye{CHANGE AIRPLANE TYPE <AirplaneType> ADD SEAT <Seat\_data>}\\
+  \tye{CHANGE AIRPLANE TYPE <AirplaneType> ADD SEATS [<Seat\_data>]}
+\end{quote}
+\paragraph{Changing seats} (of an airplane type)
+\begin{quote}
+  \tye{CHANGE AIRPLANE TYPE <AirplaneType> CHANGE SEAT <Seat> TO <Seat\_data>}\\
+  \tye{CHANGE AIRPLANE TYPE <AirplaneType> CHANGE SEATS [<Seat>] TO <Seat\_data>}
+\end{quote}
+\paragraph{Changing all seats} (of an airplane type)
+\begin{quote}
+  \tye{CHANGE AIRPLANE TYPE <AirplaneType> CHANGE SEATS TO [<Seat\_data>]}
+\end{quote}
+\paragraph{Removing seats} (from an airplane type)
+\begin{quote}
+  \tye{CHANGE AIRPLANE TYPE <AirplaneType> REMOVE SEAT <Seat>}\\
+  \tye{CHANGE AIRPLANE TYPE <AirplaneType> REMOVE SEATS [<Seat>]}
+\end{quote}
+
+
+
+\subsection{Seat types}
+Seat types correspond simply to string, which is the name of the seat type.
+Still, users need to add seat types before they can be used.
+
+\paragraph{Adding a seat type}
+\begin{quote}
+  \tye{ADD SEAT TYPE <String>}
+\end{quote}
+\paragraph{Changing a seat type}
+\begin{quote}
+  \tye{ADD SEAT TYPE <String>}
+\end{quote}
+\paragraph{Removing a seat type}
+\begin{quote}
+  \tye{REMOVE SEAT TYPE <String>}
+\end{quote}
+
+\subsection{Airline}
+\subsubsection{Types}
+\begin{description}
+  \item[\ty{Airline}] \tye{= \{?short:String, ?name:String\}}
+  \item[\ty{Airline\_data}] \tye{= \{short:String, name:String\}}
+\end{description}
+
+\subsubsection{Operations}
+Flight time operations are
+\paragraph{Adding an airline}
+\begin{quote}
+  \tye{ADD AIRLINE <Airline\_data>}
+\end{quote}
+\paragraph{Changing an airline}
+\begin{quote}
+  \tye{CHANGE AIRLINE <Airline> TO <Airline>}
+\end{quote}
+\paragraph{Removing an airline}
+\begin{quote}
+  \tye{REMOVE AIRLINE <Airline>}
+\end{quote}
+
+
+
+\subsection{Templates}
+\subsubsection{Types}
+Template types are
+\begin{description}
+  \item[\ty{Template}] \tye{= \{?fln:String,\\
+      ?airline:String,\\
+      ?from:City,\\
+      ?to:City,\\
+      ?airplaneType:AirplaneType\}}
+  \item[\ty{Template}] \tye{= \{fln:String,\\
+      airline:String,\\
+      from:City,\\
+      to:City,\\
+      airplaneType:AirplaneType,\\
+      prices:[SeatInstance\_data],\\
+      periods:[Period\_data]\}}
+\end{description}
+
+\subsubsection{Operations}
+Template operations are
+\paragraph{Adding a template}
+\begin{quote}
+  \lstinline[language=airyscript]{ADD TEMPLATE <Template_data>}
+\end{quote}
+\paragraph{Changing a template}
+\begin{quote}
+  \tye{CHANGE TEMPLATE <Template> TO <Template>}
+\end{quote}
+\paragraph{Removing a template}
+\begin{quote}
+  \tye{REMOVE TEMPLATE <Template>}
+\end{quote}
+
+\subsection{Flights}
+\subsubsection{Types}
+\begin{description}
+  \item[Flight] \tye{= \{?template:Template,\\
+      departure:DateTime,\\
+      ?arrival:DateTime,\\
+      ?airplaneType:AirplaneType,\\
+      ?duringInterval:TimePeriod\}\\
+      | \\
+      \{?template:Template,\\
+      ?departure:DateTime,\\
+      arrival:DateTime,\\
+      ?airplaneType:AirplaneType,\\
+      ?duringInterval:TimePeriod\}\\
+      | \\
+      \{?template:Template,\\
+      ?departure:DateTime,\\
+      ?arrival:DateTime,\\
+      ?airplaneType:AirplaneType,\\
+      duringInterval:TimePeriod\}
+    }
+\end{description}
+
+\subsubsection{Operations}
+Flight operations are
+\paragraph{Adding a flight}
+\begin{quote}
+  \tye{ADD FLIGHT <Flight\_data>}
+\end{quote}
+\paragraph{Changing a template}
+\begin{quote}
+  \tye{CHANGE FLIGHT <Flight> TO <Flight>}
+\end{quote}
+\paragraph{Removing a template}
+\begin{quote}
+  \tye{REMOVE FLIGHT <Flight>}
+\end{quote}
+
+
+\subsection{Period}
+\subsubsection{Types}
+Period types are
+\begin{description}
+  \item[\ty{ContainedPeriod}] \tye{= \{?from:Data, ?to:Date, ?day:Date\}}
+  \item[\ty{Period}] \tye{= \{?contained:ContainedPeriod,\\
+      ?from:Date,\\
+      ?to:Data,\\
+      ?day:String,\\
+      ?startTime:Time\}}
+  \item[\ty{Period\_data}] \tye{= \{?from:Date,\\
+      ?to:Data,\\
+      ?weekday:String,\\
+      startTime:Time\}}
+\end{description}
+
+\subsubsection{Operations}
+Period operations are
+\paragraph{Adding a period to a template}
+\begin{quote}
+  \tye{CHANGE TEMPLATE <Template> ADD PERIOD <Period\_data>}\\
+  \tye{CHANGE TEMPLATE <Template> ADD PERIODS <[Period\_data]>}
+\end{quote}
+\paragraph{Changing a period of a template}
+\begin{quote}
+  \tye{CHANGE TEMPLATE <Template> CHANGE PERIOD <Period> TO <Period\_data>}\\
+  \tye{CHANGE TEMPLATE <Template> CHANGE PERIODS [<Period>] TO <Period\_ data>}
+\end{quote}
+\paragraph{Removing a period from a template}
+\begin{quote}
+  \tye{CHANGE TEMPLATE <Template> REMOVE PERIOD <Period>}\\
+  \tye{CHANGE TEMPLATE <Template> REMOVE PERIODS [<Period>]}
+\end{quote}
+
+
+\subsection{Seat instances}
+\subsubsection{Types}
+Seat instance types are
+\begin{description}
+  \item[\ty{SeatInstance}] \tye{= \{number:Int,\\
+      ?amt:Int\} \\
+      | \\
+      \{type: String\}}
+  \item[\ty{SeatInstance\_data}]  \tye{= \{number:Int,\\
+      ?amt:Int,\\
+      price:Price\}\\
+      | \\
+      \{type:String,\\
+      price:Price\}}
+\end{description}
+
+\subsubsection{Operations}
+Seat instance operations are
+\paragraph{Changing seat instances of a template}
+\begin{quote}
+  \tye{CHANGE TEMPLATE <Template> CHANGE SEAT INSTANCES [<Seat>] TO <Seat\_data>}\\
+  \tye{CHANGE TEMPLATE <Template> CHANGE SEAT INSTANCE <Seat> TO <Seat\_data>}\\
+\end{quote}
+\paragraph{Changing all seat instances of a template}
+\begin{quote}
+  \tye{CHANGE TEMPLATE <Template> CHANGE SEAT INSTANCES TO [<Seat\_data>]}\\
+\end{quote}
+\paragraph{Changing seat instances of a flight}
+\begin{quote}
+  \tye{CHANGE FLIGHT <Flight> CHANGE SEAT INSTANCES [<Seat>] TO <Seat\_data>}\\
+  \tye{CHANGE FLIGHT <Flight> CHANGE SEAT INSTANCE <Seat> TO <Seat\_data>}\\
+\end{quote}
+\paragraph{Changing all seat instances of a flight}
+\begin{quote}
+  \tye{CHANGE FLIGHT <Flight> CHANGE SEAT INSTANCES TO [<Seat\_data>]}\\
+\end{quote}
+

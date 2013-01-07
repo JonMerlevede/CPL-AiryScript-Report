@@ -72,21 +72,33 @@
   morestring=[b]',
   morestring=[b]"""
 }
+\lstdefinelanguage{airyscript}{
+  morekeywords={AND,WITH,OF,ADD,FROM,CHANGE,REMOVE,TO,CITY,%
+    AIRPORT,DISTANCE,FLIGHT,TIME,AIRPLANE,TYPE,%
+    SEAT,SEATS,AIRLINE,TEMPLATE,PERIOD,PERIODS,INSTANCES},
+  sensitive=true,
+  %morestring=[b]",
+  %morestring=[b]',
+  %morestring=[b]"""
+}
+\lstdefinelanguage{empty}{
+}
 
  %Default settings for code listings
-\lstset{%frame=tb,
-language=scala,%
-aboveskip=3mm,%
-belowskip=3mm,%
+\lstset{language=airyscript,%
+%frame=tb,
+%aboveskip=3mm,%
+%belowskip=3mm,%
 showstringspaces=false,%
 columns=flexible,%
-basicstyle={\small\ttfamily},%
+basicstyle={\ttfamily},% 
 numbers=none,%
 numberstyle=\tiny\color{gray},%
-keywordstyle=\color{blue},%
+keywordstyle=\itshape\bfseries\color{blue},%
 commentstyle=\color{dkgreen},%
 stringstyle=\color{mauve},%
-frame=single,%
+frame=none,
+%frame=single,
 breaklines=true,%
 breakatwhitespace=true,%
 tabsize=3}
@@ -226,11 +238,26 @@ tabsize=3}
                              % DOCUMENT SPECIFIC %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Document-specific commands
-\newcommand{\sn}[1]{\texttt{#1}} % for double derivatives
+\newcommand{\sn}[1]{\texttt{#1}}
 \newcommand{\dbf}[1]{\texttt{#1}}
 \newcommand{\ty}[1]{\texttt{#1}}
 \newcommand{\tye}[1]{\texttt{#1}}
 \newcommand{\ins}[1]{\texttt{\{#1\}}}
+\definecolor{shadecolor}{rgb}{0.8,0.8,0.8}
+\NewDocumentEnvironment{texa}{O{}} %%%%%%%%
+  {
+    \begin{mdframed}[backgroundcolor=shadecolor,skipabove=\baselineskip]
+    \IfNoValueTF{#1}
+      {
+        \textit{Example:}
+        \begin{quote}
+      } %empty
+      {
+        \textit{Example:} #1
+        \begin{quote}
+      } %not empty
+  }
+  {\end{quote}\end{mdframed}}
 \graphicspath{{./img/}}
 \begin{document}
 \input{body}
