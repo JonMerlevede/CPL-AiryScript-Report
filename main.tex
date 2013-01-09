@@ -244,20 +244,64 @@ tabsize=3}
 \newcommand{\tye}[1]{\texttt{#1}}
 \newcommand{\ins}[1]{\texttt{\{#1\}}}
 \definecolor{shadecolor}{rgb}{0.8,0.8,0.8}
-\NewDocumentEnvironment{texa}{O{}} %%%%%%%%
+\newcounter{examplecounter}
+\newcounter{operationcounter}
+%\newenvironment{operation}
+\usepackage{array}
+\newcommand{\opref}[1]{(OP:\ref{#1})}
+\NewDocumentEnvironment{operation}{} %%%%%%%%
   {
-    \begin{mdframed}[backgroundcolor=shadecolor,skipabove=\baselineskip]
+    \refstepcounter{operationcounter}
+    \hspace{1pt}
+    \par
+    \vspace{10pt}
+    \noindent
+    \begin{minipage}{0.9\textwidth}
+      \begin{quote}
+  }
+  {
+      \end{quote}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.1\textwidth}
+      \begin{flushright}
+        (OP:\theoperationcounter)
+      \end{flushright}
+    \end{minipage}\hspace{\fill}
+    \par
+    \vspace{10pt}
+    \noindent
+  }
+\NewDocumentEnvironment{texa}{oo} %%%%%%%%
+  {
+    \IfNoValueTF{#2}
+      {
+        \begin{mdframed}[backgroundcolor=shadecolor,skipabove=\baselineskip]
+      }
+      {
+        \begin{mdframed}[backgroundcolor=shadecolor]
+      }
     \IfNoValueTF{#1}
       {
-        \textit{Example:}
-        \begin{quote}
+        \refstepcounter{examplecounter}
+        \textit{Example \theexamplecounter}
+        %\begin{quote}
       } %empty
       {
-        \textit{Example:} #1
+        \refstepcounter{examplecounter}
+        \textit{Example \theexamplecounter:} #1
         \begin{quote}
       } %not empty
   }
-  {\end{quote}\end{mdframed}}
+  {
+    \IfNoValueTF{#1}
+      {
+        \end{mdframed}
+      } %empty
+      {
+        \end{quote}\end{mdframed}
+      } %not empty
+  }
 \graphicspath{{./img/}}
 \begin{document}
 \input{body}

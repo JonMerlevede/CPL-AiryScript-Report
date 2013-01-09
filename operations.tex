@@ -14,7 +14,7 @@
     \tye{y} for the year.
   \item[\ty{DateTime}] \tye{= \{date:Date, ?time:Time\}}
 
-    Specifies a specific point in time. The default value for the time is at
+    Specifies a specific point in time. The default value of the time is at
     midnight.
   \item[\ty{Price}] \tye{= \{?dollar:Int, ?cent:Int\} | \{?euro:Int, ?cent:Int\}}
 
@@ -38,31 +38,47 @@ where \tye{name} specifies the name of the city.
 \subsubsection{Operations}
 City operations are
 \paragraph{Adding a city}
-\begin{quote}
+\begin{operation}
   \lstinline{ADD CITY <data:City_data>}
-\end{quote}
+  \label{op:add_city}
+\end{operation}
 Adds the city specified by \tye{data}.
+
+This operation fails if there already exists a city with the given
+name \tye{data→name}.
 
 \begin{texa}[add the city of New York.]
   \lstinline|ADD CITY {name: "New York"}|
 \end{texa}
 
 \paragraph{Changing a city}
-  \begin{quote}
-    \lstinline|CHANGE CITY <citySelector:City> TO <cityChange:City>|
-  \end{quote}
+\begin{operation}
+    \lstinline|CHANGE CITY <selector:City> TO <change:City>|
+    \label{op:change_city}
+\end{operation}
 Changes the city or cities specified by \tye{citySelector} to have the values
 specified by \tye{cityChange}.
+
+This operation fails if it would introduce multiple cities with the name
+\tye{change->name}.
+
+Airport(s) that rely on the changed city or cities selected by \tye{selector}
+update as well.
 
 \begin{texa}[change the name of the city of New York to York.]
   \lstinline|CHANGE CITY { name: "New York" } TO { name: "York" }|
 \end{texa}
 
 \paragraph{Removing a city}
-\begin{quote}
+\begin{operation}
   \lstinline{REMOVE CITY <selector:City>}
-\end{quote}
-Removes the city or cities specified by \tye{selector}.
+  \label{op:remove_city}
+\end{operation}
+Removes the city or cities specified by \tye{selector}. Removing a city also
+removes the airports in that city.
+
+This operation fails if there is a template that flies to or from any of the
+airports situated in any of the cities selected by \tye{selector}.
 
 \begin{texa}[remove the city York.]
   \lstinline|REMOVE CITY {name: "York"}|
@@ -90,33 +106,54 @@ where
 \subsubsection{Operations}
 Airport operations are
 \paragraph{Adding an airport}
-\begin{quote}
-  \lstinline{ADD AIRPORT <data:Airport\_data>}
-\end{quote}
+\begin{operation}
+  \lstinline{ADD AIRPORT <data:Airport_data>}
+  \label{op:add_airport}
+\end{operation}
 Adds the airport specified by \tye{data}.
+
+This operator fails if the \tye{data→city} property does not select
+precisely one city or there already exists an airport with the given
+\tye{data→short} property in the database.
+
 \begin{texa}[add JFK Airport to the city of New York.]
   \lstinline|ADD AIRPORT {short: JFK, name:"JFK Airport", city: {name: "York"}}|
 \end{texa}
 
 \paragraph{Changing an airport}
-\begin{quote}
+\begin{operation}
   \lstinline{CHANGE AIRPORT <selector:Airport> TO <change:Airport>}
-\end{quote}
+  \label{op:change_airport}
+\end{operation}
 Changes the airport or airports specified by \tye{selector} to have the values
-specified by
-\tye{change}.
+specified by \tye{change}.
+
+This operation fails if it would introduce multiple cities with the short
+\tye{change→short}.
+
+Template(s) that fly to or from the airport(s) selected by \tye{selector} update
+as well.
+
 \begin{texa}[change JFK Airport to be in the city of York.]
   \lstinline|CHANGE AIRPORT {short: JFK} TO {city: {name: "York"}}|
 \end{texa}
 
+
 \paragraph{Removing an airport}
-\begin{quote}
-  \lstinline{REMOVE AIRPORT <Airport>}
-\end{quote}
-Removes the airport or airports specified by \tye{selector}.
+\begin{operation}
+  \lstinline{REMOVE AIRPORT <selector:Airport>}
+  \label{op:remove_airport}
+\end{operation}
+Removes the airport or airports specified by \tye{selector}. Also removes all
+distances and flight times that refer to (any of) the deleted airport(s).
+
+This operation fails if there is a template that flies to or from any of the
+airports selected by \tye{selector}.
+
 \begin{texa}[remove JFK Airport.]
   \lstinline|REMOVE AIRPORT {short: JFK}|
 \end{texa}
+
 
 \subsection{Distance}
 \subsubsection{Types}
@@ -135,21 +172,35 @@ where \tye{dist} is the distance of the flight trajectory from \tye{from} to
 Distance operations are as follows.
 
 \paragraph{Adding a distance}
-\begin{quote}
+\begin{operation}
   \lstinline{ADD DISTANCE <data:Distance_data>}
-\end{quote}
+  \label{op:add_distance}
+\end{operation}
 Adds the distance specified by \tye{data}.
+
+This operation fails if there already exists a distance from \tye{data→from} to
+\tye{data→to}.
+
 \paragraph{Changing a distance}
-\begin{quote}
+\begin{operation}
   \lstinline{CHANGE DISTANCE <selector:Distance> TO <change:Distance>}
-\end{quote}
+  \label{op:change_distance}
+\end{operation}
 Changes the distances specified by \tye{selector} to have the values specified
 by \tye{change}.
+
+This operation fails if it would introduce multiple distances with the same
+values for \tye{from} and \tye{to}.
+
 \paragraph{Removing a distance}
-\begin{quote}
+\begin{operation}
   \lstinline{REMOVE DISTANCE <selector:Distance>}
-\end{quote}
+  \label{op:remove_distance}
+\end{operation}
 Removes the distance specified by \tye{selector}.
+
+This operation fails if executing it would delete a distance from airport $a$ to
+airport $b$ for which there exists a template that flies from $a$ to $b$.
 
 \subsection{Flight time}
 \subsubsection{Types}
@@ -157,38 +208,55 @@ Flight time types are
 \begin{description}
   \item[\ty{FlightTime}] \tye{= \{?from:Airport,\\
       ?to:Airport,\\
-      ?airplaneType:airplaneType,\\
+      ?type:AirplaneType,\\
       ?time:Time\}}
   \item[\ty{FlightTime\_data}] \tye{= \{from:Airport,\\
       to:Airport,\\
-      airplaneType:airplaneType,\\
+      type:AirplaneType,\\
       time:Time\}}
 \end{description}
-where \tye{time} is the time it takes an airplane of type \tye{airplaneType}
+where \tye{time} is the time it takes an airplane of type \tye{type}
 to travel from \tye{from} to \tye{to}.
 
 \subsubsection{Operations}
 Flight time operations are as follows.
 
 \paragraph{Adding a flight time}
-\begin{quote}
+\begin{operation}
   \lstinline{ADD FLIGHT TIME <data:FlightTime_data>}
-\end{quote}
+  \label{op:add_flighttime}
+\end{operation}
 Adds the flight time specified by \tye{data}.
 
+This operation fails if either \tye{data→from} or \tye{data→to} selects multiple
+airports, if \tye{data→type} matches multiple airplane types or if a flight time
+for the combination of \tye{data→from}, \tye{data→to} and \tye{data→type} already
+exists in the database.
+
 \paragraph{Changing a flight time}
-\begin{quote}
-  \lstinline{CHANGE FLIGHT TIME <selector:FlightTime> TO <change:FlightTime>}
-\end{quote}
+\begin{operation}
+  \begin{lstlisting}
+CHANGE FLIGHT TIME <selector:FlightTime>
+TO <change:FlightTime>
+  \end{lstlisting}
+  \label{op:change_flighttime}
+\end{operation}
 Changes the flight time or flight times specified by \tye{selector} to have the
 values specified by \tye{change}.
 
+This operation fails if it would introduce multiple flight times  with the same
+values for \tye{from}, \tye{to} and \tye{type}.
+
 \paragraph{Removing a flight time}
-\begin{quote}
+\begin{operation}
   \lstinline{REMOVE FLIGHT TIME <selector:FlightTime>}
-\end{quote}
+  \label{op:remove_flighttime}
+\end{operation}
 Removes the flight time or flight times specified by \tye{selector}.
 
+This operation fails if it would delete a time it takes an airplane of type $t$
+to travel from airport $a$ to airport $b$ for which there exists a template that
+flies from $a$ to $b$ with a template of type $t$.
 
 \subsection{Airplane type}
 \subsubsection{Types}
@@ -197,31 +265,53 @@ Airplane type types are
   \item[\ty{AirplaneType}] \tye{= \{?name:String\}}
   \item[\ty{AirplaneType\_data}] \tye{= \{name:String\}}
 \end{description}
-where \tye{name} is the name of the airplane type specified by an instance of
+where \tye{name} is the name of the airplane.
 
-There are also seats in airplanes. Seat types are
+There are also seats in airplanes. Seat types are as follows.
 \begin{description}
-  \item[\ty{SeatType}] \tye{= String}
-  \item[\ty{Seat}] \tye{= \{?number:Int, ?type:SeatType\}}
-  \item[\ty{Seat\_remove}] \tye{= \{?number:Int, ?amt:Int, ?type:SeatType\}}
-  \item[\ty{Seat\_data}] \tye{= \{?number:Int, ?amt:Int, type:SeatType\}}
+  \item[\ty{Seat}] \tye{= \{number:Int, ?amt:Int\}\\
+    | \{?type:SeatType\}}
+    
+    The default value for \ty{amt} is one.
+
+  \item[\ty{Seat\_change}] \tye{= \{number:Int, ?amt:Int, typeChange:SeatType\}\\
+    | \{?typeSelect:SeatType, typeChange:SeatType\}}
+
+    The default value for \ty{amt} is one.
+
+  \item[\ty{Seat\_data}] \tye{= \{number:Int, ?amt:Int, type:SeatType\}}
+
+    The default value for \ty{amt} is one.
 \end{description}
-where \ty{SeatType} represents a seat type and a \ty{Seat} represents a seat in
-an airplane type.
 
 \subsubsection{Operations}
 Seat numbers have to be unique within an airplane type, but do not have to be
 continuous (i.e. there can be a seat with number $n$ even if not all the seats
 from 1 to $n-1$ exist). Overlapping seat numbers will cause any of the
-operations below to throw an error.
+operations below to fail.
+
+Changing the seating arrangement of an airplane type by adding, changing or
+removing seats has an influence on all templates and/or flights with that
+airplane type, because it has an influence on seat instances and seat instance
+templates.
+\begin{itemize}
+  \item When removing seat $s$ from an airplane type, AiryScript deletes all
+    (seat and seat template) instances of $s$, including the pricing
+    information they contain.
+  \item When adding a seat $s$ to an airplane type, AiryScript creates new
+    instances of $s$, for which no pricing information is available.
+\end{itemize}
+The documentation of the methods below specifies how AiryScript handles this.
+Generally, AiryScript tries to use seat types to predict sensible prices.
 
 \paragraph{Adding an airplane type}
-\begin{quote}
-\begin{lstlisting}
+\begin{operation}
+  \begin{lstlisting}
 ADD AIRPLANE TYPE <data:AirplaneType_data>
 WITH SEATS <seats:[Seat_data]>
-\end{lstlisting}
-\end{quote}
+  \end{lstlisting}
+  \label{op:add_airplane_type}
+\end{operation}
 Adds the airplane type specified by \tye{data} with the seat arrangement
 specified in \tye{seats}. For each element in \ty{Seat\_data}, AiryScript adds
 the amount of seats specified by \tye{amt} of the type specified by \tye{type},
@@ -230,8 +320,11 @@ value for \tye{amt} is one, the default value of \tye{number} is equal to the
 highest seat number so far plus one. AiryScript processes the seats in the order
 they appear in the \tye{seats} list.
 
+This operation fails if there already exists an airplane type with name
+\tye{data→name}, or if \tye{seats→type} does not select precisely one seat type.
 
-\begin{texa}[
+
+\begin{texa}[\label{ex:add_airplane}
 Adds an airplane type with the name ‘Boeing 007’.
 The airplane type has 100 seats: 10 first class seats, 20 business seats
 and 70 economy seats. We assume these seat types already exist. The first class
@@ -254,19 +347,38 @@ ADD AIRPLANE TYPE {
 \end{texa}
 
 \paragraph{Adding seats to an airplane type}
-\begin{quote}
+\begin{operation}
   \begin{lstlisting}
 ADD SEATS <datas:[Seat_data]>
-TO AIRPLANE TYPE <airplaneSelector:AirplaneType>
+TO AIRPLANE TYPE <selector:AirplaneType>
   \end{lstlisting}
-\end{quote}
+  \label{op:add_seats}
+\end{operation}
 Adds all of the seats specified by \tye{datas} to the airplane or airplanes
-matched by \tye{airplaneSelector}.
+selected by \tye{selector}.
+
+When adding seats to airplane types, AiryScript adds seat template instances and
+seat instances for all templates and flights that use that airplane type. 
+When adding an instance $s$ with seat type $t$ linked to a template or flight
+$L$, AiryScript uses the following rules.
+\begin{itemize}
+  \item If we add the first seat of the airplane type, equivalently if no other
+    instances are linked to $L$, AiryScript sets the price of $s$ to zero.
+  \item Otherwise, if there were already seats of type $t$ in the airplane type,
+    or equivalently if there were already instances of type $t$ linked to $L$,
+    AiryScript sets the price of $s$ to the price of the instance of type $t$
+    that is linked to $L$ that has the lowest seat number.
+  \item Otherwise, if $s$ is the first seat of type $t$ to be added, it gets the
+    lowest price of any of the seat instances linked to $L$.
+\end{itemize}
 
 \paragraph{Changing an airplane type}
-\begin{quote}
-  \lstinline|CHANGE AIRPLANE TYPE <selector:AirplaneType> TO <change:AirplaneType>|
-\end{quote}
+\begin{operation}
+  \begin{lstlisting}
+CHANGE AIRPLANE TYPE <selector:AirplaneType>
+TO <change:AirplaneType>
+  \end{lstlisting}
+\end{operation}
 Changes the airplane type or airplane types specified by \tye{selector} to have
 the values specified by \tye{change}.
 %\begin{texa}[Changes the name of the ‘Boeing 007’ airplane to ‘Boeing 666’.]
@@ -281,79 +393,131 @@ the values specified by \tye{change}.
 %  }
 %\end{texa}
 
-\paragraph{Changing seats of an airplane type}
-\begin{quote}
-  \begin{lstlisting}
-CHANGE SEATS <seatSelectors:[Seat]>
-OF AIRPLANE TYPE <airplaneSelector:AirplaneType>
-TO <change:Seat>
-  \end{lstlisting}
-\end{quote}
-Changes the seat or seats selected that match any of the seat selectors in
-\tye{seatSelectors} and the airplane selector \tye{airplaneSelector} to have the
-values specified in \tye{change}.
+%\paragraph{Changing seats of an airplane type}
+%\begin{operation}
+%  \begin{lstlisting}
+%CHANGE SEATS <seatSelectors:[Seat]>
+%OF AIRPLANE TYPE <airplaneSelector:AirplaneType>
+%TO <change:Seat>
+%  \end{lstlisting}
+%  \label{op:change_seats}
+%\end{operation}
+%Changes the seat or seats selected that match any of the seat selectors in
+%\tye{seatSelectors} and the airplane selector \tye{airplaneSelector} to have the
+%values specified in \tye{change}.
 %\begin{itemize}
 %  \item If any of the seat selectors in \tye{seatSelector} specifies a seat
 %    number $n$, that seat selector selects the (single) seat with number $n$,
 %    unless it specifies a seat type that does not match the type of seat $n$.
 %  \item
-If \tye{change} specifies a seat number $n$ and $m$ seats are selected,
-the selected seat with the lowest number gets seat number $n$, the selected
-seat with the second lowest number gets seat number $n+1$ and so on. If any
-of the seat numbers in the range $[n,n+m-1]$ are already taken, the
-operation is unsuccesful and does not change any seats.
+%If \tye{change} specifies a seat number $n$ and $m$ seats are selected,
+%the selected seat with the lowest number gets seat number $n$, the selected
+%seat with the second lowest number gets seat number $n+1$ and so on. If any
+%of the seat numbers in the range $[n,n+m-1]$ are already taken, the
+%operation is unsuccessful and does not change any seats.
 %\end{itemize}
+%Note that the change seats operation is currently capable of merging seat types,
+%but not of changing the number of seats in seat types. This effect can be
+%achieved by adding and removing seats or by redefining the entire seat
+%arrangement of the airplane type.
+%
+%\vspace{\baselineskip}
 
-Note that the change seats operation is currently capable of merging seat types,
-but not of changing the number of seats in seat types. This effect can be
-achieved by adding and removing seats or by redefining the entire seat
-arrangement of the airplane type.
+\paragraph{Changing the seats of an airplane type}
+\begin{operation}
+  \label{op:change_seats}
+  \begin{lstlisting}
+CHANGE SEATS OF AIRPLANE TYPE <elector:AirplaneType>
+TO <data:[Seat_change]>
+  \end{lstlisting}
+  \label{op:change_seats_of}
+\end{operation}
+Changes the seats of the airplane type or airplane types selected by
+\tye{selector} according to the seat changes in \tye{data}.
 
-\begin{texa}[Changes the Boeing 007 from ‘Adding an airplane type’ to have three
+\begin{itemize}
+  \item A seat change that specifies \ty{number} defines the type of the seats
+    in the range $[\ty{number},\ty{number}+\ty{amt}-1]$ to type \ty{typeChange}.
+    The default value of \ty{amt} is one.
+
+  \item A seat change that specifies \tye{typeSelect} changes the type of all
+    seats of type \ty{typeSelect} to type \ty{typeChange}.
+
+  \item A seat change that does not specify \ty{number} nor \ty{typeSelect}
+    changes the type of all seats to \tye{typeChange}.
+
+  \item Seat changes are processed in the order they are defined in \tye{data}.
+\end{itemize}
+
+This operation has a different effect than first removing
+seats of the airplane type that are changed by any of the seat changes in
+\tye{data} and then adding them again with the values from the last matching
+seat change in \tye{data}. This is because removing and adding seats removes
+the pricing information of all flights and templates of all airplane types
+matching \tye{selector}.
+%This operation converts the pricing
+%information from before the change of airplane type according to the rules
+%specified in the documentation of \opref{op:change_seats}.
+
+AiryScript solves the problem of lost seat instance data (see above) by setting
+the prices of all seats with seat type $t$ in the new airplane type to the same
+price: the price of the seat with type $t$ in the airplane type before the
+change that has the lowest seat number. If the old airplane has no seats of type
+$t$, it sets the price to the price of least expensive seat on the old airplane.
+Note that this means that even instances of seats that are not selected by any
+of the selectors in \tye{seatSelectors} can be influenced.
+
+This operation fails if \tye{data→type} does not select precisely one seat type.
+
+\begin{texa}[Changes the Boeing 007 from example \ref{ex:add_airplane} to have three
   more business seats: seats number one and three (which used to be first class
 seats) and seat number 100 (which used to be an economy seat)]
   {
   \begin{lstlisting}
-CHANGE SEATS [
-  {number: 1}, {number: 3}, {number: 100}
-] OF AIRPLANE TYPE {
+CHANGE SEATS OF AIRPLANE TYPE {
   name: "Boeing 007"
-} TO {
-  type: business
-}
+} TO [
+  {number: 1, typeChange: business},
+  {number: 3, typeChange: business},
+  {number: 100, typeChange: business}
+]
   \end{lstlisting}
   }
 \end{texa}
 
-\paragraph{Changing all the seats of an airplane type}
-\begin{quote}
+\begin{texa}[Changes the Boeing 007 from Example \ref{ex:add_airplane}, turning
+    all first class seats into business seats. Assuming flight template ABC300
+  as in Example \ref{ex:add_template}, after the change all business seats on
+ABC300 flights (with default pricing) cost 100 dollar and all economy seats on
+ABC300 flights (with default pricing) cost 5 dollar.]
+  {
   \begin{lstlisting}
-CHANGE SEATS OF AIRPLANE TYPE <airplaneSelector:AirplaneType>
-TO <data:[Seat_data]>
+CHANGE OF AIRPLANE TYPE {
+  name: "Boeing 007"
+} TO {
+  typeSelect: first, typeChange:business
+}
   \end{lstlisting}
-\end{quote}
-Changes the seats of the airplane type or airplane types selected by
-\tye{airplaneSelector} to the arrangement specified by \tye{data}. Data is
-processed like when first creating the airplane type.
-
-This operation is syntactic sugar for first removing all the seats of the
-airplane type, and then adding seats using \tye{data}.
-
+  }
+\end{texa}
 \paragraph{Removing an airplane type}
-\begin{quote}
+\begin{operation}
   \lstinline|REMOVE AIRPLANE TYPE <selector:AirplaneType>|
-\end{quote}
+\end{operation}
 Removes the airplane type(s) specified by \tye{selector}. 
 
+This operation fails if there is a template or flight that uses any of the
+airplane types selected by \tye{selector}.
+
 \paragraph{Removing seats from an airplane type}
-\begin{quote}
+\begin{operation}
   \begin{lstlisting}
-REMOVE SEAT <seatSelector:Seat_remove>
+REMOVE SEAT <seatSelector:Seat>
 FROM AIRPLANE TYPE <airplaneSelector:AirplaneType>
   \end{lstlisting}
-\end{quote}
-Removes the seat(s) matched by \tye{seatSelector} from the airplane type(s)
-matched by \tye{airplaneSelector}.
+\end{operation}
+Removes the seat(s) selected by \tye{seatSelector} from the airplane type(s)
+selected by \tye{airplaneSelector}.
 
 \tye{amt} specifies the maximum number of seats to remove. If \tye{number} is
 not specified but \tye{amt} is, AiryScript deletes the seats with the highest
@@ -375,214 +539,804 @@ REMOVE SEATS [
   }
 \end{texa}
 
-
-\subsection{Seats}
-\subsubsection{Types}
-\subsubsection{Operations}
-\paragraph{Adding seats} (to an airplane type)
-\begin{quote}
-  \tye{CHANGE AIRPLANE TYPE <AirplaneType> ADD SEAT <Seat\_data>}\\
-  \tye{CHANGE AIRPLANE TYPE <AirplaneType> ADD SEATS [<Seat\_data>]}
-\end{quote}
-\paragraph{Changing seats} (of an airplane type)
-\begin{quote}
-  \tye{CHANGE AIRPLANE TYPE <AirplaneType> CHANGE SEAT <Seat> TO <Seat\_data>}\\
-  \tye{CHANGE AIRPLANE TYPE <AirplaneType> CHANGE SEATS [<Seat>] TO <Seat\_data>}
-\end{quote}
-\paragraph{Changing all seats} (of an airplane type)
-\begin{quote}
-  \tye{CHANGE AIRPLANE TYPE <AirplaneType> CHANGE SEATS TO [<Seat\_data>]}
-\end{quote}
-\paragraph{Removing seats} (from an airplane type)
-\begin{quote}
-  \tye{CHANGE AIRPLANE TYPE <AirplaneType> REMOVE SEAT <Seat>}\\
-  \tye{CHANGE AIRPLANE TYPE <AirplaneType> REMOVE SEATS [<Seat>]}
-\end{quote}
-
-
-
 \subsection{Seat types}
-Seat types correspond simply to string, which is the name of the seat type.
-Still, users need to add seat types before they can be used.
+
+\subsubsection{Types}
+The only seat type type is the following.
+\begin{description}
+  \item[\ty{SeatType}] \tye{= String}
+\end{description}
+Seat types correspond simply to strings, which is the name of the seat type
+(e.g. business, first class, …). Still, users need to add seat types before
+they can be used.
+
+Note that in the future we can still extend \tye{SeatType} by making it a union
+type, without breaking backwards compatibility.
 
 \paragraph{Adding a seat type}
-\begin{quote}
-  \tye{ADD SEAT TYPE <String>}
-\end{quote}
+\begin{operation}
+  \lstinline{ADD SEAT TYPE <data:SeatType>}
+\end{operation}
+Adds the seat type specified by \tye{data}.
+
+This operation fails if there already exists a seat type with the name
+\tye{data}.
+
+\begin{texa}[\label{ex:add_seat_type} Adds the seat types economy, business and
+  first class.]
+  \begin{lstlisting}
+ADD SEAT TYPE {business}
+ADD SEAT TYPE economy
+ADD SEAT TYPE "first class"
+  \end{lstlisting}
+\end{texa}
+
 \paragraph{Changing a seat type}
-\begin{quote}
-  \tye{ADD SEAT TYPE <String>}
-\end{quote}
+\begin{operation}
+  \lstinline{CHANGE SEAT TYPE <selector:SeatType> TO <change:SeatType>}
+\end{operation}
+Changes the seat type selected by \tye{selector} to the seat type specified by
+\tye{change}.
+
+All seats using the seat type selected by \tye{selector} update as well.
+
+This operation fails if it would introduce multiple seat types with the same
+values.
+
+\begin{texa}[Renames the seat type first class from Example
+  \ref{ex:add_seat_type} to first for convenience.]
+  \begin{lstlisting}
+CHANGE SEAT TYPE "first class" TO first
+  \end{lstlisting}
+\end{texa}
+
 \paragraph{Removing a seat type}
-\begin{quote}
-  \tye{REMOVE SEAT TYPE <String>}
-\end{quote}
+\begin{operation}
+  \lstinline{REMOVE SEAT TYPE <selector:String>}
+\end{operation}
+Removes the seat type selected by \tye{selector} from the database.
+
+This operation fails if there is a seat that has a seat type selected by
+\tye{selector} as its type.
 
 \subsection{Airline}
 \subsubsection{Types}
+Airline types are
 \begin{description}
   \item[\ty{Airline}] \tye{= \{?short:String, ?name:String\}}
   \item[\ty{Airline\_data}] \tye{= \{short:String, name:String\}}
 \end{description}
+where \tye{short} is the short code (three characters) that identifies an
+airline, and \tye{name} is the full-length name of the airline.
 
 \subsubsection{Operations}
-Flight time operations are
-\paragraph{Adding an airline}
-\begin{quote}
-  \tye{ADD AIRLINE <Airline\_data>}
-\end{quote}
-\paragraph{Changing an airline}
-\begin{quote}
-  \tye{CHANGE AIRLINE <Airline> TO <Airline>}
-\end{quote}
-\paragraph{Removing an airline}
-\begin{quote}
-  \tye{REMOVE AIRLINE <Airline>}
-\end{quote}
+Flight time operations areas follows.
 
+\paragraph{Adding an airline}
+\begin{operation}
+  \lstinline{ADD AIRLINE <data:Airline_data>}
+\end{operation}
+Adds the airline specified by \tye{data}.
+
+This operation fails if there already exists an airline with the short name
+\tye{data→short}.
+
+\paragraph{Changing an airline}
+\begin{operation}
+  \lstinline{CHANGE AIRLINE <selector:Airline> TO <change:Airline>}
+\end{operation}
+Changes the airline(s) selected by \tye{selector} to have the values specified
+by \tye{change}.
+
+Template(s) that rely on the changed airline(s) selected by \tye{selector}
+update as well.
+
+\paragraph{Removing an airline}
+\begin{operation}
+  \lstinline{REMOVE AIRLINE <selector:Airline>}
+\end{operation}
+Removes the airline(s) selected by \tye{selector}.
+
+This operation fails if there is a template bound to any of the airlines
+selected by \tye{selector}.
 
 
 \subsection{Templates}
 \subsubsection{Types}
 Template types are
 \begin{description}
-  \item[\ty{Template}] \tye{= \{?fln:String,\\
-      ?airline:String,\\
-      ?from:City,\\
-      ?to:City,\\
-      ?airplaneType:AirplaneType\}}
-  \item[\ty{Template}] \tye{= \{fln:String,\\
-      airline:String,\\
-      from:City,\\
-      to:City,\\
-      airplaneType:AirplaneType,\\
-      prices:[SeatInstance\_data],\\
-      periods:[Period\_data]\}}
+  \item[\ty{Template}] \tye{= \{?airline:String,\\
+      ?fln:String,\\
+      ?from:Airport,\\
+      ?to:Airport,\\
+      ?type:AirplaneType\}}
+  \item[\ty{Template\_change}] \tye{= \{?fln:String,\\
+      ?from:Airport,\\
+      ?to:Airport,\\
+      ?type:AirplaneType\}}
+  \item[\ty{Template\_data}] \tye{= \{fln:String,\\
+      from:Airport,\\
+      to:Airport,\\
+      type:AirplaneType\}}
+\end{description}
+where \tye{fln} is the flight number of the template, \tye{airline} is the
+airline that operates the template, \tye{from} is the airport the template flies
+from, \tye{to} is the airport the template flies to and \tye{type} specifies the
+type of aircraft the template uses.
+
+Templates also define seat template instances and are associated with periods.
+Seat template instance types are as follows.
+\begin{description}
+  \item[\ty{SeatTemplateInstanceChanger}] \tye{= \{number:Int,
+      ?amt:Int,
+      price:Price\} \\
+    | \{?type:SeatType, price:Price\}}
+
+    \tye{amt} has a default value of one.
 \end{description}
 
+Period types are as follows.
+\begin{description}
+  \item[\ty{Period\_data}] \tye{= \{?from:Date,\\
+    ?to:Date,\\
+    ?weekday:String,\\
+    startTime:Time\}}
+
+    
+  \item[\ty{ContainedPeriod}] \tye{= \{?from:Date, ?to:Date, ?day:Date\}}
+
+    A helper type to select periods. The default values of all properties is
+    ‘don’t care’.
+    A contained period $cp$ matches all periods $p$ that have
+    \begin{itemize}
+      \item A $p$\tye{→from} $\leq$ $cp$\tye{→from} in the case of a specified
+        $cp$\tye{→from},
+      \item a $p$\tye{→to} $\geq$ $cp$\tye{→to} in the case of a specified $cp$\tye{→to},
+      \item a $p$\tye{→from} $\geq$ $cp$\tye{→day} and a $p$\tye{→to} $\leq$
+        $cp$\tye{→day} in the case of a specified $cp$\tye{→day},
+      \item the intersection of the above in case of multiple specified
+        properties.
+    \end{itemize}
+
+  \item[\ty{Period}] \tye{= \{?contained:ContainedPeriod,\\
+    ?from:Date,\\
+    ?to:Date,\\
+    ?weekday:String,\\
+    ?startTime:Time\}}
+
+    %Period \tye{contained} can only be used for selecting existing period
+    %instances.
+    A \tye{Period} $p$ selects periods that exactly match the $p$\ty{→from},
+    $p$\ty{→to}, $p$\ty{→weekday} and $p$\ty{→startType} that are specified
+    (like usual), and, if specified, match \ty{contained}.
+
+    \begin{texa}[Selects all periods that occur \emph{only} on
+      Friday. This matches the period of Example \ref{ex:period}, but not the
+    period of Example \ref{ex:period2}.][skip]
+      \ty{\{weekday: friday\}}
+    \end{texa}
+    \begin{texa}[Selects all periods that are valid on the day 5/7/2013. This
+      matches both the periods from Example \ref{ex:period} and Example
+    \ref{ex:period2}. Note that 5/7/2013 is a Friday.][skip]
+      \ty{\{contained: \{day: \{d: 5, m: 7, y: 2013\}\}\}}
+    \end{texa}
+\end{description}
+
+
 \subsubsection{Operations}
-Template operations are
+Template operations are as follows.
 \paragraph{Adding a template}
-\begin{quote}
-  \lstinline[language=airyscript]{ADD TEMPLATE <Template_data>}
-\end{quote}
+\begin{operation}
+  \label{op:add_template}
+  \begin{lstlisting}
+ADD TEMPLATE <data:Template_data>
+WITH SEAT INSTANCES <seatDatas:[SeatTemplateInstanceChanger]>
+AND WITH PERIODS <periodDatas:[Period_data]>
+  \end{lstlisting}
+\end{operation}
+Adds the template specified by \tye{data}, \tye{seatDatas} and
+\tye{periodDatas}.
+
+Seat instances are processed in the order in which they appear in
+\tye{seatDatas}. This can be important, because different seat data elements in
+\tye{seatDatas} can override each other (see Example \ref{ex:add_template}).
+
+The order in which the periods appear in \tye{periodDatas} is not relevant. If
+the date \tye{periodDatas→from} is not specified, its default value is the
+current time.
+
+
+The operation fails if any of the following is true.
+\begin{itemize}
+  \item \tye{data→fln} is not correctly structured.
+  \item There already exists a template with flight number \tye{data→fln}.
+  \item The airline specified by \tye{data→fln} does not exist.
+  \item \tye{data→type} does not select precisely one airplane type.
+  \item \tye{data→from} or \tye{data→to} does not select precisely one airport.
+  \item Some seats in the airplane type \tye{data→type} are not assigned a price
+    by \tye{seatDatas}.
+  \item \tye{seatDatas} specifies a seat number that does not exist in the
+    airplane type \tye{data→type}.
+\end{itemize}
+
+The periods in \ty{periodDatas} specify how templates recur. If $p$ is a period
+in \ty{periodDatas}. Then $p$\tye{→from} specifies the date starting from which
+a period is valid, $p$\tye{→to} specifies the date until when a period is valid,
+$p$\tye{→weekday} specifies a weekday and $p$\tye{→startTime} specifies the time
+of day when airplanes depart.
+    \begin{itemize}
+      \item Weekday can take values \ty{monday}, \ty{tuesday}, \ty{thursday},
+        \ty{wednesday}, \ty{friday}, \ty{saturday} and \ty{sunday}. Any other
+        values cause a parsing error.
+      \item If \ty{weekday} is not specified, the period is valid on all
+        weekdays, i.e., specifies seven flights a week, with there being a
+        flight every day of the week at \tye{startTime}.
+        
+        If \ty{weekday} is specified, the period is only valid on the specified
+        weekday, i.e., specifies one flight at \tye{startTime} a week.
+      \item The default value of \tye{from} is the current time.
+      \item The default value of \tye{to} is infinity, i.e. the period never
+        ends.
+      \begin{texa}[\label{ex:period}A \ty{Period\_data} instance that specifies
+        flights at 12:00 every friday from now until the end of times.][skip]
+        \ty{\{weekday: friday, startTime: {h: 12}\}}
+      \end{texa}
+      \begin{texa}[\label{ex:period2}A \ty{Period\_data} instance that specifies flights at
+        23:44 every day of the year 2013.][skip]
+        \ty{\{from: {d:1, m:1, y:2013},\\
+        to: {d: 31, m: 12, y:2013},\\
+        startTime: {h: 23, m:44}\}}
+      \end{texa}
+    \end{itemize}
+If there is a template $T$ with a period $p$, this means that there is a
+flight instance of $T$ at the hour specified by $p$ on all the days
+specified by $p$. Note that $p$ can specify an infinite number of days by
+leaving out the end time, and therefore an infinite number of flights.
+AiryScript immediately allows users to change any of these flights, at any
+time, right after creating $T$ with $p$.
+
+There can be multiple identical periods bound to $T$. By adding an
+identical period twice, there will be two flights of $T$ at 12:00 every
+Friday from now until the end of times.
+\begin{texa}[A template that is bound to the period specified by Example
+    \ref{ex:period} twice, has two flights at 12:00 every friday from now
+  until the end of times.]
+\end{texa}
+\vspace{\baselineskip}
+A template that is not linked to any period is a non-recurring template.
+These templates can still be useful, because users can also add flights
+manually using \opref{op:add_flight}, but always need to bind them to a
+template.
+
+\begin{texa}[\label{ex:add_template}
+    Adds template ABC300, which flies from Zürich airport to Zaventem
+    using a Boeing 007 airplane. First class seats cost 200 dollar, business
+    class seats cost 100 dollar and economy class seats cost 50 dollar, except
+    from seat number 11, which costs only 5 dollar, and seat number 12, which
+    costs 5000 dollar. ABC300 flies every tuesday at 12:55 for five years, from
+    28/12/2015 to 28/12/2020.]
+  \begin{lstlisting}
+ADD TEMPLATE {
+    fln: ABC300,
+    from: {city: {name: Zürich}},
+    to: {name: Zaventem}
+    type: "Boeing 007"
+} WITH SEAT INSTANCES [
+    {type: first, price: {dollar: 200}},
+    {type: business, price: {dollar: 100}},
+    {type: economy, price: {dollar: 50}},
+    {number: 11, amt: 2, price: {dollar: 5000}}
+    {number: 11, price: {dollar: 5}}
+] AND WITH PERIODS [{
+    day: tuesday,
+    departure: {h: 12, m:55},
+    from: {d: 28, m:12, y:2015},
+    to: {d: 28, m: 12, y:2020}
+}]
+  \end{lstlisting}
+\end{texa}
+
+\paragraph{Adding periods to a template}
+\begin{operation}
+  \label{op:add_periods}
+  \begin{lstlisting}
+ADD PERIODS <datas:[Period_data]>
+TO TEMPLATE <selector:Template>
+  \end{lstlisting}
+\end{operation}
+Adds the periods specified by \tye{datas} to the template selected by
+\tye{selector}. This new period specifies new flights as described in the
+documentation of \opref{op:add_template}.
+
+This operation fails if \tye{selector} does not match precisely one template.
+
+\begin{texa}[\label{ex:add_periods}Specifies a recurring period for the template
+  ABC300 of Example \ref{ex:add_template}, so that there is an extra flight of
+  ABC300 every Friday during the summer vacation of 2013.]
+  \begin{lstlisting}
+ADD PERIODS {
+    weekday: friday,
+    from: {d: 1, m: 7, y:2013},
+    to: {d: 1, m: 8, y:2013}
+} TO TEMPLATE { fln: ABC300 }
+  \end{lstlisting}
+\end{texa}
+
+
 \paragraph{Changing a template}
-\begin{quote}
-  \tye{CHANGE TEMPLATE <Template> TO <Template>}
-\end{quote}
+\begin{operation}
+  \begin{lstlisting}
+CHANGE TEMPLATE <selector:Template>
+TO <change:Template>
+  \end{lstlisting}
+\end{operation}
+Changes the templates specified by \tye{selector} to have the values specified
+by \tye{change}.
+
+If \tye{change} specifies a change of airplane type, this operation tries to
+convert prices of seat instance templates in the same way as
+\opref{op:change_seats}.
+
+Flights that are bound to a changed template may change together with changes to
+the template.
+\begin{itemize}
+  \item AiryScript never changes flights with a departure time that lies in the
+    past (i.e. a departure time smaller than the current time).
+  \item AiryScript never changes properties of flights that a user changed
+    manually.
+    \begin{itemize}
+      \item If a user specified a price for a seat on a specific flight,
+        changing the price of that seat in the underlying flight template has no
+        effect on the price of the seat on that flight.
+
+        If a user did not specify a specific price for a seat on a specific
+        flight, changing the price of that seat in the underling flight template
+        causes the price of that seat to change together with the price of that
+        seat in the template.
+      \item If a user specified a specific departure time for a flight, that
+        departure time no longer changes together with the time specified in
+        template.
+      \item If a user specified a specific airplane type for a flight, that
+        airplane type no longer changes together with the airplane
+        type of the template.
+
+        Specifying a specific airplane type requires translating seat prices, as
+        is explained in the section on airplane types and \opref{op:add_seats}.
+        After specifying an airplane type, the translated seat prices also no
+        longer change together with the template.
+      \item If a user specified a specific arrival time, that arrival time no
+        longer changes together with changes of the flight time associated with
+        the template.
+    \end{itemize}
+    
+    For example, if a user has specified that business seats on a
+    flight cost 500 dollars, changing the template of that flight does not
+    change the price of business seats. If the user used default values for the
+    price of economy seats, those default values change together with changes to
+    the template.
+\end{itemize}
+\begin{texa}
+  \\
+  Create a template where all seats cost 100 dollar. It flies from Brussels to
+  JFK airport in New York, every day at 8 o’clock from 9/1/2013 until the end of
+  times using a Boeing 007. We assume these airports and airplane types already
+  exist.
+  \begin{quote}\begin{lstlisting}
+ADD TEMPLATE {
+    fln: JON007,
+    from: {city: {name:Brussels}}
+    to: {short: JFK, city: {name:"New York"}}
+    type: "Boeing 007"
+} WITH SEAT INSTANCES {
+    price: {dollar: 100}
+} AND WITH PERIODS [
+    from: {d: 9, m: 01, y: 2013}
+    startTime: {h: 8}
+]
+  \end{lstlisting}\end{quote}
+  We expect a lot of people will want to fly from Brussels to New York on
+  9/1/2013, so we create an extra flight for this template at midnight that
+  specifies a special price of 300 dollar for the business seats. Because this
+  is the first flight in a series of many, the flight is made using a special
+  party airplane.
+  \begin{quote}\begin{lstlisting}
+ADD FLIGHT {
+    template: {fln: JON007},
+    departure: {date: {d: 9, m:1, y: 2013}},
+    type: Partyplane
+} WITH SEAT INSTANCES {
+    type: business, price: {dollar:300}
+}
+  \end{lstlisting}\end{quote}
+  On this flight, all seats now cost 100 dollar, except from the business seats,
+  which cost 300 dollar.
+  We also expect ‘economy’ people are willing to pay more during the summer
+  vacation, so we specify a higher economy seat price of 150 dollar for those
+  flights.
+  \begin{quote}\begin{lstlisting}
+CHANGE SEAT INSTANCES OF FLIGHT {
+    fln: JON007,
+    duringInterval:
+    {
+        from: {d:1, m:7, y:2013},
+        to: {d:1, m:8, y:2013}
+    }
+} TO {
+    type: economy, price: {dollar: 150}
+}
+  \end{lstlisting}\end{quote}
+  We now decide that 100 dollar for a seat is really never enough, so we change
+  the default price of flights by changing the JON007 template.
+  \begin{quote}\begin{lstlisting}
+CHANGE SEAT INSTANCES OF TEMPLATE {
+    fln: JON007
+} TO {
+    price: {dollar:200}
+}
+  \end{lstlisting}\end{quote}
+  Now, on the first flight we created, all seats except the business seats still
+  cost 100 dollar. The price of these seats did not change, because the first
+  flight specified a special airplane type. The business seats on the first
+  flight still cost 300 dollar.
+  
+  Seats on flights during the summer vacation all cost 200 dollar, except from
+  the economy seats, which still cost 150 dollar. All seats on all other flights
+  with the JON007 template cost 200 dollar. This are infinitely many flights and
+  seats!
+
+  We also change the airplane type to the newer Boeing 666. We suppose this new
+  airplane type already exists.
+  \begin{quote}\begin{lstlisting}
+CHANGE TEMPLATE {fln: JON007}
+TO {
+    type: "Boeing 666"
+}
+  \end{lstlisting}\end{quote}
+  All flights belonging to the JON007 template, also the flights in the summer
+  vacation, now use the Boeing 666 airplane. That is, all except from the first
+  flight, which still uses the party airplane.
+\end{texa}
+\vspace{\baselineskip}
+This operation fails if it would introduce multiple templates with the same
+flight number.
+
+\paragraph{Changing seat template instances of a template}
+\begin{operation}
+  \label{op:change_seat_template_instance}
+  \begin{lstlisting}
+CHANGE SEAT INSTANCES OF TEMPLATE <selector:Template>
+TO <changes:[SeatTemplateInstanceChanger]>
+  \end{lstlisting}
+\end{operation}
+Changes the seat template instances of the template(s) selected by
+\tye{selector} according to the seat template instance changes in \ty{changes}.
+\begin{itemize}
+  \item A seat template instance change $i\in\ty{changes}$ that specifies
+    $i$\ty{→number} changes the price of the seat template instances with
+    numbers in the range $[i\ty{→number},i\ty{→number}+i\ty{→amt}-1]$ to
+    $i$\ty{→price}. The default value of $i$\ty{→amt} is one.
+
+  \item A seat template instance change $i\in\ty{changes}$ that specifies
+    $i$\tye{→type} changes the price of all seat template instances with type
+    $i$\ty{→type} to $i$\ty{→price}.
+
+  \item A seat template instance change $i\in\ty{changes}$ that does not specify
+    $i$\ty{→number} nor $i$\ty{→type} changes the price of all seat template
+    instances to $i$\tye{→price}.
+
+  \item Seat template instance changes are processed in the order they are
+    defined in \tye{data}. The effects of an instance changer can be overridden
+    by an instance changer that is processed later on in the list.
+\end{itemize}
+
+\paragraph{Changing periods of a template}
+\begin{operation}
+  \label{op:change_periods}
+  \begin{lstlisting}
+CHANGE PERIOD <periodSelector:Period>
+TEMPLATE <templateSelector:Template>
+TO <change:Period_data>
+  \end{lstlisting}
+\end{operation}
+Changes all periods selected by \ty{periodSelector} of the templates selected
+by \ty{templateSelector} to have the values specified by \ty{change}.
+
+Flights that rely on the changed periods change as well. Let $p$ be a changed
+period before it is changed and $p’$ be that period after the change. Periods
+affect flights as described in \opref{op:add_template}.
+
+\begin{itemize}
+  \item \opref{op:change_periods} leaves the flights bound to $p$ that $p’$
+    specifies that $p$ also specifies unchanged. This includes flights with
+    changed departure times.
+  \item \opref{op:change_periods} initialises the flights bound to $p$ that $p’$
+    specifies but $p$ does not specify are initialised with the defaults set in
+    the template selected by \ty{templateSelector}.
+  \item \opref{op:change_periods} removes the flights bound to $p$ that $p$
+    specifies but $p’$ does not specify from the database. This includes all
+    flights for which the departure time was changed. Removing a flight also
+    removes all its seat instances.
+
+    \opref{op:change_periods} makes an exception to this rule when
+    $p$\ty{→weekday} and $p’$\ty{→weekday} are different but both specified. In
+    that case, \opref{op:change_periods} shifts all existing flights for which
+    the user did not change the departure time so that from the old day of the
+    week to the new day of the week. \opref{op:change_periods} leaves the
+    flights for which the user did manually change the departure time unchanged.
+\end{itemize}
+
+This operation fails if \tye{templateSelector} does not select exactly one
+template.
+
+\begin{texa}[\label{ex:change_periods}
+    Changes the period(s) of the template ABC300 defined in Example
+    \ref{ex:add_template} to be valid on Wednesdays instead of on tuesdays. If
+    ABC300 contains only the period defined in Example
+    \ref{ex:add_periods}, no flights are removed and no information is lost. If
+    ABC300 also contains other periods, information on pricing is lost only if
+    they were valid on all weekdays.]
+  \begin{lstlisting}
+CHANGE PERIOD { }
+OF TEMPLATE {name: ABC300}
+TO {weekday: wednesday}
+  \end{lstlisting}
+\end{texa}
+
+\paragraph{Changing all periods of a template}
+\begin{operation}
+  \label{op:change_periods}
+  \begin{lstlisting}
+CHANGE PERIODS OF TEMPLATE <selector:Template>
+TO <datas:[Period_data]>
+  \end{lstlisting}
+\end{operation}
+This operation is syntactic sugar for first removing all periods from the
+template specified by \tye{selector} using \opref{op:remove_periods} and then
+adding all of the periods specified by \tye{datas} using
+\opref{op:add_periods}.
+
 \paragraph{Removing a template}
-\begin{quote}
-  \tye{REMOVE TEMPLATE <Template>}
-\end{quote}
+\begin{operation}
+  \lstinline{REMOVE TEMPLATE <selector:Template>}
+\end{operation}
+Removes the templates selected by \tye{selector}. AiryScript also removes all
+periods and future and past flights associated with the template along with all
+pricing information on the template and all pricing information of the deleted
+flights.
+
+This is a dangerous operation. If an overview of past flights should be kept,
+consider simply removing all periods from the template. The template then also
+no longer specifies any recurring flights.
+
+\begin{texa}[Remove all flights and flight templates from the system. The effect
+  is similar to executing \ty{sudo rm -rf /} on UNIX systems.]
+  \begin{lstlisting}
+REMOVE TEMPLATE { }
+  \end{lstlisting}
+\end{texa}
+
+\paragraph{Removing periods from a template}
+\begin{operation}
+  \label{op:remove_periods}
+  \begin{lstlisting}
+REMOVE PERIODS <periodSelectors:[Period]>
+FROM TEMPLATE <templateSelector:Template>
+  \end{lstlisting}
+\end{operation}
+Removes the periods selected by any of the period selectors in
+\tye{periodSelectors} from all of the templates matched by
+\ty{templateSelector}. Also deletes all flights that were created from any of
+the deleted periods.
+
+
+\begin{texa}[Removes all recurring flights that fly only on Mondays. The
+  president of GlobAir. Inc. \emph{really} hates mondays.]
+  \begin{lstlisting}
+REMOVE PERIODS {
+    day: monday
+} FROM TEMPLATE { }
+  \end{lstlisting}
+\end{texa}
+\begin{texa}[Removes all recurring flights that of the ABC300 template. This is
+  an alternative to deleting the template that keeps information on past
+flights.]
+  \begin{lstlisting}
+REMOVE PERIODS { }
+FROM TEMPLATE {
+    fln: ABC300
+}
+  \end{lstlisting}
+\end{texa}
+
 
 \subsection{Flights}
+Flight types are as follows.
 \subsubsection{Types}
 \begin{description}
-  \item[Flight] \tye{= \{?template:Template,\\
+  \item[\tye{Flight}] \tye{= \{?template:Template,\\
       departure:DateTime,\\
       ?arrival:DateTime,\\
-      ?airplaneType:AirplaneType,\\
+      ?type:AirplaneType,\\
       ?duringInterval:TimePeriod\}\\
       | \\
       \{?template:Template,\\
       ?departure:DateTime,\\
       arrival:DateTime,\\
-      ?airplaneType:AirplaneType,\\
+      ?type:AirplaneType,\\
       ?duringInterval:TimePeriod\}\\
       | \\
       \{?template:Template,\\
       ?departure:DateTime,\\
       ?arrival:DateTime,\\
-      ?airplaneType:AirplaneType,\\
+      ?type:AirplaneType,\\
       duringInterval:TimePeriod\}
     }
+  \item[\ty{Flight\_change}] \tye{= \{?departure:DateTime,\\
+      ?arrival:DateTime,\\
+      ?type:AirplaneType,\\
+      duringInterval:TimePeriod\}}
+  \item[\ty{Flight\_data}] \tye{= \{template: Template,\\
+      departure: DateTime,\\
+      ?arrival: DateTime,\\
+      ?airplaneType: AirplaneType\}}
+\end{description}
+The \ty{Flight} type is long because either \ty{departure}, \ty{arrival} or
+\ty{duringInterval} has to be specified. This is to prevent users from being
+able to select an infinite number of flights. AiryScript is not capable of
+processing infinite numbers of flights directly, but users can work with
+infinite flight collections by specifying and manipulating template defaults and
+template periods.
+
+Users can also change properties related to seats of flights using the following
+type.
+\begin{description}
+  \item[\ty{SeatTemplateInstanceChanger}] \tye{= \{number:Int,
+      ?amt:Int,
+      price:Price\} \\
+    | \{?type:SeatType, price:Price\}}
 \end{description}
 
 \subsubsection{Operations}
-Flight operations are
+Flight operations are as follows.
+
+
 \paragraph{Adding a flight}
-\begin{quote}
-  \tye{ADD FLIGHT <Flight\_data>}
-\end{quote}
-\paragraph{Changing a template}
-\begin{quote}
-  \tye{CHANGE FLIGHT <Flight> TO <Flight>}
-\end{quote}
-\paragraph{Removing a template}
-\begin{quote}
-  \tye{REMOVE FLIGHT <Flight>}
-\end{quote}
+\begin{operation}
+  \label{op:add_flight}
+  \begin{lstlisting}
+ADD FLIGHT <flightData:Flight_data>
+  \end{lstlisting}
+\end{operation}
+Adds the flight specified by \ty{flightData}.
 
+Using this operation, users can add single flights without having to define a
+new period for the underlying template. Periods are meant to describe recurring
+flights.
 
-\subsection{Period}
-\subsubsection{Types}
-Period types are
-\begin{description}
-  \item[\ty{ContainedPeriod}] \tye{= \{?from:Data, ?to:Date, ?day:Date\}}
-  \item[\ty{Period}] \tye{= \{?contained:ContainedPeriod,\\
-      ?from:Date,\\
-      ?to:Data,\\
-      ?day:String,\\
-      ?startTime:Time\}}
-  \item[\ty{Period\_data}] \tye{= \{?from:Date,\\
-      ?to:Data,\\
-      ?weekday:String,\\
-      startTime:Time\}}
-\end{description}
+\paragraph{Adding a flight with seat instances}
+\begin{operation}
+  \begin{lstlisting}
+ADD FLIGHT <flightData:Flight_data>
+WITH SEAT INSTANCES <seatDatas:[SeatInstanceChanger]>
+  \end{lstlisting}
+\end{operation}
+TODO
 
-\subsubsection{Operations}
-Period operations are
-\paragraph{Adding a period to a template}
-\begin{quote}
-  \tye{CHANGE TEMPLATE <Template> ADD PERIOD <Period\_data>}\\
-  \tye{CHANGE TEMPLATE <Template> ADD PERIODS <[Period\_data]>}
-\end{quote}
-\paragraph{Changing a period of a template}
-\begin{quote}
-  \tye{CHANGE TEMPLATE <Template> CHANGE PERIOD <Period> TO <Period\_data>}\\
-  \tye{CHANGE TEMPLATE <Template> CHANGE PERIODS [<Period>] TO <Period\_ data>}
-\end{quote}
-\paragraph{Removing a period from a template}
-\begin{quote}
-  \tye{CHANGE TEMPLATE <Template> REMOVE PERIOD <Period>}\\
-  \tye{CHANGE TEMPLATE <Template> REMOVE PERIODS [<Period>]}
-\end{quote}
+\paragraph{Changing a flight}
+\begin{operation}
+  \begin{lstlisting}
+CHANGE FLIGHT <selector:Flight>
+TO <change:Flight_change>
+  \end{lstlisting}
+\end{operation}
+TODO
 
-
-\subsection{Seat instances}
-\subsubsection{Types}
-Seat instance types are
-\begin{description}
-  \item[\ty{SeatInstance}] \tye{= \{number:Int,\\
-      ?amt:Int\} \\
-      | \\
-      \{type: String\}}
-  \item[\ty{SeatInstance\_data}]  \tye{= \{number:Int,\\
-      ?amt:Int,\\
-      price:Price\}\\
-      | \\
-      \{type:String,\\
-      price:Price\}}
-\end{description}
-
-\subsubsection{Operations}
-Seat instance operations are
-\paragraph{Changing seat instances of a template}
-\begin{quote}
-  \tye{CHANGE TEMPLATE <Template> CHANGE SEAT INSTANCES [<Seat>] TO <Seat\_data>}\\
-  \tye{CHANGE TEMPLATE <Template> CHANGE SEAT INSTANCE <Seat> TO <Seat\_data>}\\
-\end{quote}
-\paragraph{Changing all seat instances of a template}
-\begin{quote}
-  \tye{CHANGE TEMPLATE <Template> CHANGE SEAT INSTANCES TO [<Seat\_data>]}\\
-\end{quote}
 \paragraph{Changing seat instances of a flight}
-\begin{quote}
-  \tye{CHANGE FLIGHT <Flight> CHANGE SEAT INSTANCES [<Seat>] TO <Seat\_data>}\\
-  \tye{CHANGE FLIGHT <Flight> CHANGE SEAT INSTANCE <Seat> TO <Seat\_data>}\\
-\end{quote}
-\paragraph{Changing all seat instances of a flight}
-\begin{quote}
-  \tye{CHANGE FLIGHT <Flight> CHANGE SEAT INSTANCES TO [<Seat\_data>]}\\
-\end{quote}
+\begin{operation}
+  \begin{lstlisting}
+CHANGE SEAT INSTANCES OF <selector:Flight>
+TO <changes:[SeatInstanceChanger]>
+  \end{lstlisting}
+\end{operation}
+Changes the seat instances of the flight(s) selected by
+\tye{selector} according to the seat template instance changes in \ty{changes}.
+\begin{itemize}
+  \item A seat instance change $i$ that specifies $i$\ty{→number} changes the
+    price of seat instances with numbers in the range
+    $[i\ty{→number},i\ty{→number}+i\ty{→amt}-1]$ to $i$\ty{→price}.  The
+    default value of $i$\ty{→amt} is one.
 
+  \item A seat instance change $i$ that specifies $i$\tye{→type} changes the
+    price of all seat instances with type $i$\ty{→type} to type $i$\ty{→price}.
+
+  \item A seat instance change $i$ that does not specify $i$\ty{→number}
+    nor $i$\ty{→type} changes the price of all seat instances to
+    $i$\tye{→price}.
+
+  \item Seat template instance changes are processed in the order they are
+    defined in \tye{data}. The effects of an instance changer can be overridden
+    by an instance changer that is processed later on in the list.
+\end{itemize}
+
+\paragraph{Removing a template}
+\begin{operation}
+  \begin{lstlisting}
+REMOVE FLIGHT <selector:Flight>
+  \end{lstlisting}
+\end{operation}
+Users can also remove flights that were defined by a period and not by
+\opref{op:add_flight}.
+
+
+%\subsection{Period}
+%\subsubsection{Types}
+%Period types are
+%\begin{description}
+%  \item[\ty{ContainedPeriod}] \tye{= \{?from:Data, ?to:Date, ?day:Date\}}
+%  \item[\ty{Period}] \tye{= \{?contained:ContainedPeriod,\\
+%      ?from:Date,\\
+%      ?to:Data,\\
+%      ?day:String,\\
+%      ?startTime:Time\}}
+%  \item[\ty{Period\_data}] \tye{= \{?from:Date,\\
+%      ?to:Data,\\
+%      ?weekday:String,\\
+%      startTime:Time\}}
+%\end{description}
+%
+%\subsubsection{Operations}
+%Period operations are
+%\paragraph{Adding a period to a template}
+%\begin{quote}
+%  \tye{CHANGE TEMPLATE <Template> ADD PERIOD <Period\_data>}\\
+%  \tye{CHANGE TEMPLATE <Template> ADD PERIODS <[Period\_data]>}
+%\end{quote}
+%\paragraph{Changing a period of a template}
+%\begin{quote}
+%  \tye{CHANGE TEMPLATE <Template> CHANGE PERIOD <Period> TO <Period\_data>}\\
+%  \tye{CHANGE TEMPLATE <Template> CHANGE PERIODS [<Period>] TO <Period\_ data>}
+%\end{quote}
+%\paragraph{Removing a period from a template}
+%\begin{quote}
+%  \tye{CHANGE TEMPLATE <Template> REMOVE PERIOD <Period>}\\
+%  \tye{CHANGE TEMPLATE <Template> REMOVE PERIODS [<Period>]}
+%\end{quote}
+%
+%
+%\subsection{Seat instances}
+%\subsubsection{Types}
+%Seat instance types are
+%\begin{description}
+%  \item[\ty{SeatInstance}] \tye{= \{number:Int,\\
+%      ?amt:Int\} \\
+%      | \\
+%      \{type: String\}}
+%  \item[\ty{SeatInstance\_data}]  \tye{= \{number:Int,\\
+%      ?amt:Int,\\
+%      price:Price\}\\
+%      | \\
+%      \{type:String,\\
+%      price:Price\}}
+%\end{description}
+%
+%\subsubsection{Operations}
+%Seat instance operations are
+%\paragraph{Changing seat instances of a template}
+%\begin{quote}
+%  \tye{CHANGE TEMPLATE <Template> CHANGE SEAT INSTANCES [<Seat>] TO <Seat\_data>}\\
+%  \tye{CHANGE TEMPLATE <Template> CHANGE SEAT INSTANCE <Seat> TO <Seat\_data>}\\
+%\end{quote}
+%\paragraph{Changing all seat instances of a template}
+%\begin{quote}
+%  \tye{CHANGE TEMPLATE <Template> CHANGE SEAT INSTANCES TO [<Seat\_data>]}\\
+%\end{quote}
+%\paragraph{Changing seat instances of a flight}
+%\begin{quote}
+%  \tye{CHANGE FLIGHT <Flight> CHANGE SEAT INSTANCES [<Seat>] TO <Seat\_data>}\\
+%  \tye{CHANGE FLIGHT <Flight> CHANGE SEAT INSTANCE <Seat> TO <Seat\_data>}\\
+%\end{quote}
+%\paragraph{Changing all seat instances of a flight}
+%\begin{quote}
+%  \tye{CHANGE FLIGHT <Flight> CHANGE SEAT INSTANCES TO [<Seat\_data>]}\\
+%\end{quote}
+%
