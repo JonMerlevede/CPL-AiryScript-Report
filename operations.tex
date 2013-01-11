@@ -865,6 +865,7 @@ ADD PERIODS {
 
 \paragraph{Changing a template}
 \begin{operation}
+  \label{op:change_template}
   \begin{lstlisting}
 CHANGE TEMPLATE <selector:Template>
 TO <change:Template>
@@ -915,7 +916,7 @@ the template.
     price of economy seats, those default values change together with changes to
     the template.
 \end{itemize}
-\begin{texa}
+\begin{texa}\label{ex:change_template}
   \\
   Create a template where all seats cost 100 dollar. It flies from Brussels to
   JFK airport in New York, every day at 8 o’clock from 9/1/2013 until the end of
@@ -1060,7 +1061,7 @@ affect flights as described in \opref{op:add_template}.
     \opref{op:change_periods} makes an exception to this rule when
     $p$\ty{→weekday} and $p’$\ty{→weekday} are different but both specified. In
     that case, \opref{op:change_periods} shifts all existing flights for which
-    the user did not change the departure time so that from the old day of the
+    the user did not change the departure time from the old day of the
     week to the new day of the week. \opref{op:change_periods} leaves the
     flights for which the user did manually change the departure time unchanged.
 \end{itemize}
@@ -1173,8 +1174,7 @@ Flight types are as follows.
     }
   \item[\ty{Flight\_change}] \tye{= \{?departure:DateTime,\\
       ?arrival:DateTime,\\
-      ?type:AirplaneType,\\
-      duringInterval:TimePeriod\}}
+      ?type:AirplaneType\}}
   \item[\ty{Flight\_data}] \tye{= \{template: Template,\\
       departure: DateTime,\\
       ?arrival: DateTime,\\
@@ -1202,25 +1202,46 @@ Flight operations are as follows.
 
 \paragraph{Adding a flight}
 \begin{operation}
-  \label{op:add_flight}
   \begin{lstlisting}
-ADD FLIGHT <flightData:Flight_data>
+ADD FLIGHT <data:Flight_data>
   \end{lstlisting}
 \end{operation}
-Adds the flight specified by \ty{flightData}.
+Adds the flight specified by \ty{data}.
+This operation is syntactic sugar for \opref{op:add_flight} with an empty list
+of seat instance changers (\lstinline|ADD FLIGHT data WITH SEAT INSTANCES []|).
 
-Using this operation, users can add single flights without having to define a
-new period for the underlying template. Periods are meant to describe recurring
-flights.
+
+
+
 
 \paragraph{Adding a flight with seat instances}
 \begin{operation}
+  \label{op:add_flight}
   \begin{lstlisting}
 ADD FLIGHT <flightData:Flight_data>
 WITH SEAT INSTANCES <seatDatas:[SeatInstanceChanger]>
   \end{lstlisting}
 \end{operation}
-TODO
+This operation adds a single flight with the data specified in \tye{flightData}
+and seat instance changes specified by \tye{seatDatas}.
+
+If the arrival time or airplane type are not specified, they are set to the
+default values in the template. As long as the \tye{departure}
+
+Using this operation, users can add single flights without specifying a new
+period for the underlying template. Use \opref{op:add_periods} to add lots of
+flights using only one operation.
+
+Flights with a \tye{data→departure} that lies in the future that do not specify
+prices for some seat instances, airplane type or arrival time use the default
+values derived from the template \tye{data→template}. If the default values of
+in \tye{data→template} changes, the (future) flights that use these default
+values change as well. See the documentation of \opref{op:change_template} on
+page \pageref{op:change_template} for all information and an extended example
+that includes the creation of a flight using ADD FLIGHT.
+
+This operation fails if \tye{flightData→template} does not match exactly one
+template.
 
 \paragraph{Changing a flight}
 \begin{operation}
@@ -1229,7 +1250,31 @@ CHANGE FLIGHT <selector:Flight>
 TO <change:Flight_change>
   \end{lstlisting}
 \end{operation}
-TODO
+Changes the flight(s) selected by \ty{selector} according to the values
+specified in \ty{change}.
+
+Changing properties of a flight can have an influence on how the flight changes
+together with changes to its underlying template. See the documentation of
+\opref{op:change_template} for more information.
+
+This operation fails if \tye{change→type} matches multiple airplane types.
+
+\begin{texa}
+  \label{ex:change_flight}
+  We extend the code of Example \ref{ex:change_template} (page
+  \pageref{ex:change_template}). ABC decides that it does not want to use the
+  party airplane after all, and changes the type of airplane to Boeing 666.
+  \begin{quote}\begin{lstlisting}
+CHANGE FLIGHT {
+  template: {fln: JON007},
+  type: Partyplane
+} TO {
+  type: "Boeing 666"
+}
+  \end{lstlisting}\end{quote}
+  Note that the prices of all seats this flight are still ‘decoupled’ from the
+  default values defined in the JON007 template.
+\end{texa}
 
 \paragraph{Changing seat instances of a flight}
 \begin{operation}
@@ -1264,8 +1309,38 @@ Changes the seat instances of the flight(s) selected by
 REMOVE FLIGHT <selector:Flight>
   \end{lstlisting}
 \end{operation}
+Removes the flight(s) selected by \ty{selector}. This also removes all seat
+instances associated with those flights.
+
 Users can also remove flights that were defined by a period and not by
 \opref{op:add_flight}.
+
+\begin{texa}
+  Create a template that defines flights every day at 8h starting from 9/1/2013.
+  \begin{lstlisting}
+ADD TEMPLATE {
+    fln: JON007,
+    from: {city: {name:Brussels}}
+    to: {short: JFK, city: {name:"New York"}}
+    type: "Boeing 007"
+} WITH SEAT INSTANCES {
+    price: {dollar: 100}
+} AND WITH PERIODS [
+    from: {d: 9, m: 1, y: 2013}
+    startTime: {h: 8}
+]
+  \end{lstlisting}
+  Removes the flights from the above template during the first summer vacation.
+  \begin{lstlisting}
+REMOVE FLIGHT {
+  template: {fln: JON007}
+  duringInterval: {
+      from: {d:1, m:7, y:2013},
+      to: {d:31, m:8, y:2013}
+  }
+}
+  \end{lstlisting}
+\end{texa}
 
 
 %\subsection{Period}
