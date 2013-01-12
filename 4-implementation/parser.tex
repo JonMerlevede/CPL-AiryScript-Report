@@ -5,6 +5,8 @@ operations, or throw an error if the syntax is incorrect. We extended the
 \class{StandardTokenParsers} class available in the standard scala api, this
 allowed to make a clean, extendable parser written in pure functional code.
 
+We mentioned the 
+
 \subsubsection{Tokens} 
 
 The first step in the process of parsing is translating the string into a list
@@ -24,7 +26,7 @@ token:
 	corresponding tokens if they are not part of a larger word. Concretely this
 	means that they are only parsed if they are surrounded by white space or
 	delimiters. The reserved keywords in our implementation are all the words used
-	to describe operations: \sn{ADD},\sn{CITY}, \sn{AIRPORT}, etc.
+	to describe operations: \sn{ADD}, \sn{REMOVE}, \sn{CITY}, \sn{AIRPORT}, etc.
 	\end{description}
 \item[numeric literal] Whenever a sequence of numbers is spotted, this will be
 parsed into a numeric literal token.
@@ -38,13 +40,14 @@ they are sepeterated by delimiters and white space.
 	
 \par
 Parsing the string \sn{ADD CITY \{name:Brussels, short:BRU\}} will result into
-the following list: \sn{ADD}, \sn{CITY}, \sn{"\{"}, \sn{ident name}, \sn{":"},
-\sn{ident Brussels}, \sn{","}, \sn{ident short}, \sn{":"}, \sn{BRU}, \sn{"\}"}.
+the following list: \sn{keyw ADD}, \sn{keyw CITY}, \sn{"keyw \{"}, \sn{ident
+name}, \sn{keyw :}, \sn{ident Brussels}, \sn{keyw ,}, \sn{ident short},
+\sn{keyw  :}, \sn{keyw BRU}, \sn{keyw \}}.
  
 \par
 Note that the actual creation of these tokens is completely done by the
-StdTokenParsers class that we extended. The only thing we provide is the list
-with delimiters and reserved keywords.
+\class{StdTokenParsers} class that we extended. The only thing we provide is the
+list with delimiters and reserved keywords.
 
 
 \subsubsection{Parsing operators}
@@ -59,19 +62,36 @@ a list of all the possible operators. A fragment of this part:
 
 \begin{lstlisting}
 def parseOp(): Parser[Operation]  =
-    "ADD" ~> "CITY" ~> parseCityData ^^ {c => new AddCity(c)} |
-    "ADD" ~> "AIRPORT" ~> parseAirportData ^^ {a => new AddAirport(a)} |
-    \ldots
+    "ADD" ~> "CITY" ~> parseCityData ^^ {c => AddCity(c)} |
+    "ADD" ~> "AIRPORT" ~> parseAirportData ^^ {a => AddAirport(a)}
+    //...
 \end{lstlisting}
 
 \par
-StanderdTokensParsers provides us with range of special operations that can
-easily be used to parse tokens. The \sn{\textasciitilde>} in the fragment above is used to
-match a keyword token corresponding to that string, the result obtained form
-this match is however discarted. The \sn{\textasciicircum\textasciicircum} is
-used to retain the result from this line of match operators. In the first line of our example above this will
-simply be the result of parseCityData, since the result of the other match
-operations got discarted.
+The \class{StanderdTokensParsers} provides us with a range of special operations
+that can easily be used to parse tokens. The \sn{\textasciitilde>} in the
+fragment above is used to match a keyword token corresponding to that string,
+the result obtained form this match is however discarted. The
+\sn{\textasciicircum\textasciicircum} is used to retain the result from this
+line of match operators. 
+
+\par
+The \sn{parseCityData} in the code above is simple a val which contains the
+definition to parse a \class{City\_data}. If the provided string actually
+matches with this definition then an actual \class{City\_data} object will be
+constructed and passed to the function after the \sn{\textasciicircum\textasciicircum}
+operator. We use this to construct a new \class{AddCity} case class, which
+maps 1-to-1 with the definition of add city as explained in
+\ref{sec:operations}.
+
+\par
+The following string will match the first operator in the definition above, the
+definition in \sn{parseCityData} will create the actual city with name
+\sn{"Brussels"} which is stored inside a new \class{AddCity}.
+
+\begin{lstlisting}
+"ADD CITY {name:Brussels}"
+\end{lstlisting}
 
 
 \subsubsection{Parsing types}

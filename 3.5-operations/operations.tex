@@ -3,49 +3,49 @@
 
 In this section we will give a detailed overview of all the available
 operations and types in the concrete syntax of our DSL.
+ 
+\subsection{Relation with the semantic-model}
 
-% \subsection{Relation with the semantic-model}
-% 
-% Before we do this however we want to relate these operations to our
-% \class{Operations}s from the semantic model (\ref{fig:semantic-model}). We never
-% gave an explicit list of these \class{Operation}s because they map almost
-% always 1-to-1 to the operations we will present here. It would be extremely
-% redundant to add both.
-% 
-% Lets look at how operations relate with their counterparts from the
-% semantic-model. Consider for example the following operation:
-% 
-% \begin{operation}
-%   \lstinline{ADD CITY <data:City_data>}
-%   \label{op:add_city}
-% \end{operation}
-% 
-% This consists of a few keywords (ADD and CITY) (in the case of union types) and
-% finally a certain data that has to be provided. Every operation simply maps to
-% an \class{Operation} from the semantic model by removing all the keywords and
-% considering all the types as \class{Abstract Structure}s or \class{Concrete Structure}s. 
-% 
-% Let us now focus on the one exception to this general rule, consider the
-% following 2 operations:
-% \begin{operation}
-%   \begin{lstlisting}
-% ADD SEAT <datas:Seat_data>
-% TO AIRPLANE TYPE <selector:AirplaneType>
-%   \end{lstlisting}
-%   \label{op:add_seats}
-% \end{operation}
-% \begin{operation}
-%   \begin{lstlisting}
-% ADD SEATS <datas:[Seat_data]>
-% TO AIRPLANE TYPE <selector:AirplaneType>
-%   \end{lstlisting}
-%   \label{op:add_seats}
-% \end{operation} 
-% Clearly the first operation is simply a special case of the second operation.
-% We can just regard this as syntactical sugar. There is only 1 representation of
-% this operation in our semantic model, namely an \class{AddSeats}
-% \class{Operation} with an argument of type \tye{List[Seat\_data]} and an
-% argument of type \tye{AirplaneType}.
+Before we do this however we want to relate these operations to our
+\class{Operations}s from the semantic model (\ref{fig:semantic-model}). We never
+gave an explicit list of these \class{Operation}s because they map almost
+always 1-to-1 to the operations we will present here. It would be extremely
+redundant to add both.
+
+Lets look at how operations relate with their counterparts from the
+semantic-model. Consider for example the following operation:
+
+\begin{operation}
+  \lstinline{ADD CITY <data:City_data>}
+  \label{op:add_city}
+\end{operation}
+
+This consists of a few keywords (ADD and CITY) (in the case of union types) and
+finally a certain data that has to be provided. Every operation simply maps to
+an \class{Operation} from the semantic model by removing all the keywords and
+considering all the types as \class{Abstract Structure}s or \class{Concrete Structure}s.
+
+Let us now focus on the one exception to this general rule, consider the
+following 2 operations:
+\begin{operation}
+  \begin{lstlisting}
+ADD SEAT <datas:Seat_data>
+TO AIRPLANE TYPE <selector:AirplaneType>
+  \end{lstlisting}
+  \label{op:add_seats}
+\end{operation}
+\begin{operation}
+  \begin{lstlisting}
+ADD SEATS <datas:[Seat_data]>
+TO AIRPLANE TYPE <selector:AirplaneType>
+  \end{lstlisting}
+  \label{op:add_seats}
+\end{operation}
+Clearly the first operation is simply a special case of the second operation.
+We can just regard this as syntactical sugar. There is only 1 representation of
+this operation in our semantic model, namely an \class{AddSeats}
+\class{Operation} with an argument of type \tye{List[Seat\_data]} and an
+argument of type \tye{AirplaneType}.
 
 
 \subsection{Basic types}
