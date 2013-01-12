@@ -284,12 +284,12 @@ tabsize=3}
       {
         \begin{mdframed}[backgroundcolor=shadecolor,skipabove=\baselineskip]
       }
-      {
+      { 
         \begin{mdframed}[backgroundcolor=shadecolor]
       }
     \IfNoValueTF{#1}
       {
-        \refstepcounter{examplecounter}
+        \refstepcounter{examplecounter} 
         \textit{Example \theexamplecounter}
         %\begin{quote}
       } %empty
@@ -297,7 +297,7 @@ tabsize=3}
         \refstepcounter{examplecounter}
         \textit{Example \theexamplecounter:} #1
         \begin{quote}
-      } %not empty
+      } %not empty 
   }
   {
     \IfNoValueTF{#1}
