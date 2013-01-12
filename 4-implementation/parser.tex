@@ -1,54 +1,54 @@
 \subsection{Scala Parser}
 
-The responsibility of our parser is to turn a string into one of the possible
+The responsibility of the parser is to convert a string into one of the possible
 operations, or throw an error if the syntax is incorrect. We extended the
-\class{StandardTokenParsers} class available in the standard scala api, this
+\class{StdTokenParsers} class available in the standard Scala api, this
 allowed to make a clean, extendable parser written in pure functional code.
 
-\par
-We mentioned the semantics model in \ref{subs:semantic}. The parser was very
-much designed on this model. We did not implement a completely general approach
-however, in principle we could have programmed an approach that could go
-as far as read our type definitions by reflection and generate the right parsing
-at runtime. This approach might be more automised but would have too many
-negative effects (harder to implement, less readable, less adjustable, ..).
+\par We mentioned the semantics model in \ref{subs:semantic}. The parser was
+inspired on this model to a great extent. We did not implement a completely
+general approach however, in principle we could have programmed an approach that
+could go as far as read our type definitions by reflection and generate the
+right parsing at runtime. This approach might be more automised but would have
+too many negative effects (harder to implement, less readable, less adjustable,
+..).
 
 \par
 Instead we reencoded the definitions of all our types and operations in the
-parser, note that while this is redundant in a way, it is still strictly typed
-so changes in type are reflected. our evaluation is based on the semantics
+parser. Note that while this is redundant in a way, it is still strictly typed
+so changes in type are reflected. The evaluation is based on the semantic
 model, we basically check if an operation is well typed based on this model.
 
 
 \subsubsection{Tokens} 
 
-The first step in the process of parsing is translating the string into a list
-of tokens. Special sequences within the string will be converted into special
-tokens aswell.
+The first step in the parsing process is translating the string into
+a list of tokens. Thereby special sequences within the string will be converted
+into special tokens.
 
 \par
 There are 4 kinds of tokens:
 \begin{description} 
-\item[keywords] There are 2 sort of sequences that can be parsed into a keyword
+\item[Keywords] There are 2 sorts of sequences that can be parsed into a keyword
 token:
 	\begin{description}
-	\item[delimiters] whenever one of these sequences is recognized it is parsed
+	\item[Delimiters] whenever one of these sequences is recognized it is parsed
 	into a delimiter-token. The delimiters in our implementation are: \sn{\{},
 	\sn{\}}, \sn{,}, \sn{:}.
-	\item[reserved keywords] These sequences are only parsed into their
+	\item[Reserved keywords] These sequences are only parsed into their
 	corresponding tokens if they are not part of a larger word. Concretely this
 	means that they are only parsed if they are surrounded by white space or
 	delimiters. The reserved keywords in our implementation are all the words used
 	to describe operations: \sn{ADD}, \sn{REMOVE}, \sn{CITY}, \sn{AIRPORT}, etc.
 	\end{description}
-\item[numeric literal] Whenever a sequence of numbers is spotted, this will be
+\item[Numeric literal] Whenever a sequence of numbers is spotted, this will be
 parsed into a numeric literal token.
-\item[string literal] Whenever a sequence between quotation marks is found it is
+\item[String literal] Whenever a sequence between quotation marks is found it is
 converted as a whole into a string literal, so within this sequence no further
-splitting is done. This is usefull for providing strings that contain spaces
+splitting is done. This is useful for providing strings that contain spaces
 such as \sn{New York}.
-\item[identifier] Basically any kind of words that were not described before,
-they are sepeterated by delimiters and white space.
+\item[Identifier] Basically any kind of words that were not described before,
+they are separated by delimiters and white space.
 \end{description}
 	
 \par
@@ -65,8 +65,8 @@ list with delimiters and reserved keywords.
 
 \subsubsection{Parsing operators}
 
-Ones a list of tokens is obtained the actual parsing can start. We can use the
-syntax provided by the StdTokenParsers class to do this.
+Once a list of tokens is obtained the actual parsing can start. We can use the
+syntax provided by the \class{StdTokenParsers} class to do this.
 
 \par
 The first step in parsing an operation is quite simple. Since every operator
@@ -81,15 +81,15 @@ def parseOp(): Parser[Operation]  =
 \end{lstlisting}
 
 \par
-The \class{StanderdTokensParsers} provides us with a range of special operations
+The \class{StdTokensParsers} provides us with a range of special operations
 that can easily be used to parse tokens. The \sn{\textasciitilde>} in the
 fragment above is used to match a keyword token corresponding to that string,
-the result obtained form this match is however discarted. The
+the result obtained form this match is however discarded. The
 \sn{\textasciicircum\textasciicircum} is used to retain the result from this
 line of match operators. 
 
 \par
-The \sn{parseCityData} in the code above is simple a val which contains the
+The \sn{parseCityData} in the code above is a simple val which contains the
 definition to parse a \class{City\_data}. If the provided string actually
 matches with this definition then an actual \class{City\_data} object will be
 constructed and passed to the function after the \sn{\textasciicircum\textasciicircum}
@@ -109,13 +109,13 @@ definition in \sn{parseCityData} will create the actual city with name
 
 \subsubsection{Parsing types}
 
-Parsing types is analoug to parsing operators, only that a few additional
+Parsing types is analogue to parsing operators, only that a few additional
 problems have to be tackled here. Let us look at the example of parsing city
-data. For this example sn{\{name:Brussels, short:BRU\}} and \sn{\{short:BRU,
+data. For this example \sn{\{name:Brussels, short:BRU\}} and \sn{\{short:BRU,
 name:Brussels\}} are both valid descriptions of city data. The order in which
-the attributes appear in the definition do not matter. Also the user does not
-have to explicitly mention what kind of data he is providing, we have a
-structural typesystem so we can infer this.
+the attributes appear in the definition does not matter. Also the user does not
+have to explicitly mention what kind of data he is providing as we have a
+structural typesystem so this can easily be inferred this.
 
 \par
 Whenever we match an operator we check that for each of the expected arguments
@@ -125,16 +125,18 @@ following features:
 
 \begin{enumerate}
   \item When parsing a type we loop over all of its properties. Whenever a
-  property is not recognized (not a valid property for this type) we backtrack.
-  \item While looping over all the properties we place all of them in a map,
-  this map is afterwards used to check if all the non-optional fields were
-  provided. We use a map so the order in which the properties were defined has
-  no influence.
-  \item Types can be arbitrary nested, luckily the \class{StanderdTokensParsers}
-  provides for all the necessary backtracking tools to handle this, not much
-  extra syntax is required to trigger this.
+  property is not recognized (not a valid property for this type) backtracking
+  is triggered.
+  \item While looping over all the properties, they are all placed in a map,
+  which is afterwards used to check if all the non-optional fields were
+  provided. By using a map in order to exclude the influence of the order in
+  which the properties were defined.
+  \item Types can be arbitrary nested, luckily the \class{StdTokensParsers}
+  provides all the necessary backtracking tools to handle this so there is not
+  much extra syntax required to trigger this.
   \item Recall from \ref{sec:operations} that our language contains joins, this
   means we must try and match with all of these kinds before backtracking.
-  \item A straightforward algorithm for parsing lists was required, in which we
-  simply build a list piece by piece trying to match as many types as possible.
+  \item A straightforward algorithm for parsing lists was required, in which 
+  simply a list is built piece by piece trying to match as many types as
+  possible.
 \end{enumerate}

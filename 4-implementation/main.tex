@@ -5,14 +5,15 @@ We decided to program AiryScript in Scala fairly early on for the following
 reasons.
 \begin{itemize}
   \item We wanted to be able to really define our own language syntax.
-    Generally, this means having our own parser and not merely calling ‘eval’ in
+    Generally, this means having our own parser and not merely calling 'eval' in
     some other language. Also, all of the members of our team prefer typed
     languages. Therefore, we also wanted to create a typed language. We could
     not see how to do this without making our own parser. We were already in
     possession of some basic parser code for Scala.
   \item Some of the members of our team were already familiar with Scala.
-  \item All of the members of our team were already familiar with Java, which
-    makes it fairly easy to learn (the very basics of) Scala.
+  \item The whole team has a thorough knowledge in Java gained in other courses
+  and projects. This smooths the learning curve of learning (the basic
+  principles of) an almost entirely new language. 
   \item Scala has very good support for pattern matching through case classes
     (i.e. tagged unions). We make extensive use of this in our code.
   \item Some of the members of our team had been looking for a good opportunity
@@ -24,23 +25,27 @@ reasons.
 
 We divided the implementation in 3 parts:
 \begin{enumerate}
-\item The parser: Responsible for parsing a string into the right operation, or
-returning a parse error if the given expression was incorrect.
-\item The operation handler: The actual implementation of all the different
-operators. This part is responsible for verifying all the arguments of an
-operation and either trowing an error if these arguments were
-incorrect/incomplete or performing the operation. Both for verifying aswell as
-performing an operation database acces is required.
-\item The database: We used an SQL database to backup the system. The
-implementation of this database closely resembles the domain model.
+\item The parser: Responsible for parsing a string into the correct operation,
+or returning a parse error if the given expression was incorrect.
+\item The operation handler: This component contains the implementation logic
+of all the operators. The handler is responsible for the consistency checking of
+all the provided arguments of an operation and either throwing an error if one
+or more arguments were incorrect/incomplete or performing the operation. The
+database will be accessed for verification as well as performing the actual
+\textsc{crud} operation.
+\item The database: We used an SQL database to persist. The
+implementation of this database is closely related to the domain model.
 \end{enumerate} 
 	
 \par
-All of the operations and types are resembled by a single case class in scala,
-which captures all of the required information to use this. The parser will
-parse a string into an operation, after which this is passed to the second
-phase. The handler can then handle these operations by pattern matching over the
-different kinds of operators and their respective arguments.
+All of the operations and types are represented by a single case class in Scala,
+which captures all of the required information to use this. All three of the
+aforementioned components are united in a single script which will execute them
+in the following order. First, the parser will parse the user's input into an
+operation, after which this is passed to the second phase. The handler will
+subssequently handle these operations by pattern matching over the different
+kinds of operators and their respective arguments. In case an error occured
+somewhere along this execution path, the user will be informed of what went wrong.
 
 
 \input{4-implementation/parser}
