@@ -380,9 +380,10 @@ constraints specified in the domain of Section \ref{sec:domain} are kept.
 
 
 \subsection{The semantic model}
+\label{subs:semantic}
 
 \begin{figure}
-\includegraphics[width=\textwidth]{img/semanticModel.jpg}
+\includegraphics[width=\textwidth]{img/semanticModel.png}
 \caption{High level semantic model.}
 \label{fig:semantic-model}
 \end{figure}
@@ -400,12 +401,12 @@ will act upon this model, which is a nice way of decoupling these 2
 functionalities.
 
 Concretely all the operations and structures in this semantic model map 1 to 1
-with scala case classes. The parser will parse a string into the proper
+with scala classes. The parser will parse a string into the proper
 \class{Operation}-case class. This piece of data can be passed to the handler to
 actually perform the operation.
 
-But we are running ahead, lets first examine these operations, structures and
-primitive types in more detail.
+But we are running ahead, lets first examine these operations, structures, lists
+and primitive types in more detail.
 
 
 \subsection{Describing and creating structures}
@@ -474,6 +475,8 @@ instance of \ty{A}.
   \ins{b: "bottles of beer", a: 10}\\
 \end{quote}
 
+In the semantic model these are the \class{ConcreteStructure}s. They each all
+have atleast one \class{Property} which is also visible in the model.
 
 \paragraph{Types with optional properties}
 In the documentation,
@@ -494,6 +497,9 @@ instance of \ty{B}.
   \ins{a: 10, b: 5 c: "bottles of beer"}\\
   \ins{a: 10, b: 5}
 \end{quote}
+
+These optional properties correspond to the optional boolean field in the
+semantic model.
 
 \paragraph{Types of nested structures}
 In the documentation,
@@ -527,6 +533,9 @@ instance of \ty{D}.
   \ins{a: 10, b: tomatoes}\\
   \ins{a: 10, b: 5}
 \end{quote}
+
+Note that these union types are exactly the \class{Abstract Structure} that we
+defined in the semantic model.
 
 
 \paragraph{Lists}

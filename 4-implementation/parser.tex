@@ -5,7 +5,20 @@ operations, or throw an error if the syntax is incorrect. We extended the
 \class{StandardTokenParsers} class available in the standard scala api, this
 allowed to make a clean, extendable parser written in pure functional code.
 
-We mentioned the 
+\par
+We mentioned the semantics model in \ref{subs:semantic}. The parser was very
+much designed on this model. We did not implement a completely general approach
+however, in principle we could have programmed an approach that could go
+as far as read our type definitions by reflection and generate the right parsing
+at runtime. This approach might be more automised but would have too many
+negative effects (harder to implement, less readable, less adjustable, ..).
+
+\par
+Instead we reencoded the definitions of all our types and operations in the
+parser, note that while this is redundant in a way, it is still strictly typed
+so changes in type are reflected. our evaluation is based on the semantics
+model, we basically check if an operation is well typed based on this model.
+
 
 \subsubsection{Tokens} 
 
@@ -101,21 +114,27 @@ problems have to be tackled here. Let us look at the example of parsing city
 data. For this example sn{\{name:Brussels, short:BRU\}} and \sn{\{short:BRU,
 name:Brussels\}} are both valid descriptions of city data. The order in which
 the attributes appear in the definition do not matter. Also the user does not
-have to explicitly mention what kind data he is providing. That means that we
-need to check if the data he provided matches any of the possible formats for
-this operation. Since data types can be nested we need to check all
-possibilities and backtrack when a mismatch is spotted.
+have to explicitly mention what kind of data he is providing, we have a
+structural typesystem so we can infer this.
 
 \par
-Luckily the implementation for backtracking is already present in the parser we
-extended. We have to use the right operators however to trigger this. Whenever
-we use the \sn{\textasciicircum?} operator it will behave the same as a the
-\sn{\textasciicircum\textasciicircum} operator except that when the result cannot
-match we will backtrack instead of fail parsing.
+Whenever we match an operator we check that for each of the expected arguments
+the user provides a type in the right form. Without going into further details
+here (the implementation is quite straightforward to review) we added the
+following features:
 
-\par
-We implemented a general way of dealing with the order of attributes. Whenever
-we start parsing any kind of data object we pull out all of its attributes and
-place them in a map. This map can thereafter be consulted to see if all required
-attributes were provided, regardless of the order they were originally provided
-in.
+\begin{enumerate}
+  \item When parsing a type we loop over all of its properties. Whenever a
+  property is not recognized (not a valid property for this type) we backtrack.
+  \item While looping over all the properties we place all of them in a map,
+  this map is afterwards used to check if all the non-optional fields were
+  provided. We use a map so the order in which the properties were defined has
+  no influence.
+  \item Types can be arbitrary nested, luckily the \class{StanderdTokensParsers}
+  provides for all the necessary backtracking tools to handle this, not much
+  extra syntax is required to trigger this.
+  \item Recall from \ref{sec:operations} that our language contains joins, this
+  means we must try and match with all of these kinds before backtracking.
+  \item A straightforward algorithm for parsing lists was required, in which we
+  simply build a list piece by piece trying to match as many types as possible.
+\end{enumerate}
