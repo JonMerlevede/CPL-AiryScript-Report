@@ -1,6 +1,53 @@
 \section{Types and operations}
 \label{sec:operations}
 
+In this section we will give a detailed overview of all the available
+operations and types in the concrete syntax of our DSL.
+
+% \subsection{Relation with the semantic-model}
+% 
+% Before we do this however we want to relate these operations to our
+% \class{Operations}s from the semantic model (\ref{fig:semantic-model}). We never
+% gave an explicit list of these \class{Operation}s because they map almost
+% always 1-to-1 to the operations we will present here. It would be extremely
+% redundant to add both.
+% 
+% Lets look at how operations relate with their counterparts from the
+% semantic-model. Consider for example the following operation:
+% 
+% \begin{operation}
+%   \lstinline{ADD CITY <data:City_data>}
+%   \label{op:add_city}
+% \end{operation}
+% 
+% This consists of a few keywords (ADD and CITY) (in the case of union types) and
+% finally a certain data that has to be provided. Every operation simply maps to
+% an \class{Operation} from the semantic model by removing all the keywords and
+% considering all the types as \class{Abstract Structure}s or \class{Concrete Structure}s. 
+% 
+% Let us now focus on the one exception to this general rule, consider the
+% following 2 operations:
+% \begin{operation}
+%   \begin{lstlisting}
+% ADD SEAT <datas:Seat_data>
+% TO AIRPLANE TYPE <selector:AirplaneType>
+%   \end{lstlisting}
+%   \label{op:add_seats}
+% \end{operation}
+% \begin{operation}
+%   \begin{lstlisting}
+% ADD SEATS <datas:[Seat_data]>
+% TO AIRPLANE TYPE <selector:AirplaneType>
+%   \end{lstlisting}
+%   \label{op:add_seats}
+% \end{operation} 
+% Clearly the first operation is simply a special case of the second operation.
+% We can just regard this as syntactical sugar. There is only 1 representation of
+% this operation in our semantic model, namely an \class{AddSeats}
+% \class{Operation} with an argument of type \tye{List[Seat\_data]} and an
+% argument of type \tye{AirplaneType}.
+
+
 \subsection{Basic types}
 \begin{description}
   \item[\ty{Time}] \tye{= \{?h:Int, ?m:Int, ?s:Int\}}
@@ -349,6 +396,13 @@ ADD AIRPLANE TYPE {
 \paragraph{Adding seats to an airplane type}
 \begin{operation}
   \begin{lstlisting}
+ADD SEAT <datas:Seat_data>
+TO AIRPLANE TYPE <selector:AirplaneType>
+  \end{lstlisting}
+  \label{op:add_seats}
+\end{operation}
+\begin{operation}
+  \begin{lstlisting}
 ADD SEATS <datas:[Seat_data]>
 TO AIRPLANE TYPE <selector:AirplaneType>
   \end{lstlisting}
@@ -513,6 +567,12 @@ airplane types selected by \tye{selector}.
 \begin{operation}
   \begin{lstlisting}
 REMOVE SEAT <seatSelector:Seat>
+FROM AIRPLANE TYPE <airplaneSelector:AirplaneType>
+  \end{lstlisting}
+\end{operation}
+\begin{operation}
+  \begin{lstlisting}
+REMOVE SEATS <seatSelector:[Seat]>
 FROM AIRPLANE TYPE <airplaneSelector:AirplaneType>
   \end{lstlisting}
 \end{operation}
@@ -838,6 +898,13 @@ ADD TEMPLATE {
 
 \paragraph{Adding periods to a template}
 \begin{operation}
+  \label{op:add_period}
+  \begin{lstlisting}
+ADD PERIOD <datas:Period_data>
+TO TEMPLATE <selector:Template>
+  \end{lstlisting}
+\end{operation}
+\begin{operation}
   \label{op:add_periods}
   \begin{lstlisting}
 ADD PERIODS <datas:[Period_data]>
@@ -1039,6 +1106,14 @@ TEMPLATE <templateSelector:Template>
 TO <change:Period_data>
   \end{lstlisting}
 \end{operation}
+\begin{operation}
+  \label{op:change_periods}
+  \begin{lstlisting}
+CHANGE PERIODS <periodSelector:[Period]>
+TEMPLATE <templateSelector:Template>
+TO <change:Period_data>
+  \end{lstlisting}
+\end{operation}
 Changes all periods selected by \ty{periodSelector} of the templates selected
 by \ty{templateSelector} to have the values specified by \ty{change}.
 
@@ -1117,6 +1192,13 @@ REMOVE TEMPLATE { }
 \end{texa}
 
 \paragraph{Removing periods from a template}
+\begin{operation}
+  \label{op:remove_periods}
+  \begin{lstlisting}
+REMOVE PERIOD <periodSelectors:Period>
+FROM TEMPLATE <templateSelector:Template>
+  \end{lstlisting}
+\end{operation}
 \begin{operation}
   \label{op:remove_periods}
   \begin{lstlisting}

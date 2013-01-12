@@ -1,7 +1,7 @@
 \section{Design description}
 This section describes the design of the DSL implemented by AiryScript. It
 contains information on both its development process and its current syntax. The
-next section, 
+next section,
 \begin{itemize}
   \item Section \ref{sec:devising_syntax} describes the syntax of the
     predecessors of AiryScript, and their influence on its current syntax.
@@ -212,7 +212,7 @@ iteration one and two.
   \item It is possible to read sentences out loud, just like in the language of
     iteration one. The labels and commands in front of structures make them
     quite readable.
-    
+
     We believe that even without ever having seen a description of what the
     different operations in our language do or having seen a
     description of the syntax of our language, people familiar with the domain
@@ -233,303 +233,11 @@ configuration by changing the prices of the flights over a specified time
 period, but this requires an additional operation.
 
 
-\subsection{Describing and creating structures}
-\label{sec:syntax_spec}
-This section specifies how to create structures in AiryScript and explains the
-notation that Section \ref{sec:operations} uses to specify types. Even though
-AiryScript does not require its users to declare types or provide them with
-the possibility to define their own types, knowing how to describe types and how
-the typing system of AiryScript works is important, since AiryScript is a typed
-language.
-
-\paragraph{Primitive types}
-AiryScript supports strings and integers as primitive types. The statements
-\begin{quote}
-  \tye{5}\\
-  \tye{502349}
-\end{quote}
-define the integers 5 and 502349. The statements
-\begin{quote}
-  \tye{IAmFreeOfSpacesAndIThereforeDoNotRequireQuotation}\\
-  \tye{"I am not free of spaces and therefore I do require quotation"}\\
-  \tye{"IAmFreeOfSpacesYetICanStillUseQuotation"}
-\end{quote}
-each define a string. Users should surround strings that contain spaces and/or
-commas with quotation marks.
-
-
-\paragraph{Structures}
-AiryScript also supports structures. Structures consist of one or several
-properties. Properties have a name and a value. A name is always a string that
-does not contain any spaces. A value is either a primitive value or another
-structure. Names are separated from values by a colon, properties are separated
-from each other by commas and structures are defined within curly brackets. As
-an example,
-\begin{quote}
-  \ins{a: 10, b: 5}
-\end{quote}
-defines a structure with a property named \tye{a} that has an integer primitive
-value of ten and a property named \tye{b} that has an integer primitive value of
-five. AiryScript is not sensitive to whitespace or newlines. For example,
-\begin{quote}
-  \begin{verbatim}
-{  a:10, b       :
-                    5}
-  \end{verbatim}
-\end{quote}
-defines the same structure as before.
-
-
-\paragraph{Basic structure types}
-In the documentation,
-\begin{quote}
-  \ty{A}\tye{ = \ins{a: Int, b: String}}
-\end{quote}
-defines \ty{A} to be shorthand for the type that collects all structures that
-have properties named \tye{a} and \tye{b} with respective types \tye{Int} and
-\tye{String}. Structures that define an \tye{Int} and a \tye{String} with
-different names do not belong to type \ty{A}. This simple definition completely
-describes a type. If AiryScript would allow users to define their own types and
-operations, this would be the syntax it would use.
-
-As an example, the following two lines each define a structure that is an
-instance of \ty{A}.
-\begin{quote}
-  \ins{a: 10, b: tomatoes}\\
-  \ins{b: "bottles of beer", a: 10}\\
-\end{quote}
-
-
-\paragraph{Types with optional properties}
-In the documentation,
-\begin{quote}
-  \ty{B}\tye{ = \ins{a: Int, ?b: Int, ?c: String}}
-\end{quote}
-defines \ty{B} to be shorthand to the type that collects all structures that
-have properties named \tye{a} with type \ty{Int}, and that optionally has two
-more properties with names \tye{b} and \tye{c} and values with respective types
-\ty{Int} and \ty{String}. Structures that either have parameters
-with names different from \tye{a}, \tye{b} or \tye{c} or that have an \tye{a},
-\tye{b} or \tye{c} with a different type do not belong to \ty{B}.
-
-As an example, all of the following lines define a structure that is an
-instance of \ty{B}.
-\begin{quote}
-  \ins{c: "bottles of beer", a: 10}\\
-  \ins{a: 10, b: 5 c: "bottles of beer"}\\
-  \ins{a: 10, b: 5}
-\end{quote}
-
-\paragraph{Types of nested structures}
-In the documentation,
-\begin{quote}
-  \ty{C}\tye{ = \ins{a: B, b: String}}
-\end{quote}
-defines \ty{C} to be shorthand for the type of structures that have properties
-with names \tye{aB} and \tye{aString}, with types \tye{B} and \tye{String}
-respectively. Since we can further expand \ty{B}, this is in turn shorthand for
-\begin{quote}
-  \ins{a: \ins{a: Int, ?b: Int, ?c: String}, b: String}. 
-\end{quote}
-
-As an example, the following line defines a structure that is an instance of
-\ty{C}.
-\begin{quote}
-  \ins{b: \ins{a: 10, b: 5}, a: "bottles of beer"}
-\end{quote}
-
-\paragraph{Union types}
-In the documentation,
-\begin{quote}
-  \ty{D}\tye{ = A | B}
-\end{quote}
-defines a type that contains both the structures contained in \tye{A} and the
-structures contained in \tye{B}.
-
-As an example, both of the following lines define a structure that is an
-instance of \ty{D}.
-\begin{quote}
-  \ins{a: 10, b: tomatoes}\\
-  \ins{a: 10, b: 5}
-\end{quote}
-
-
-\paragraph{Lists}
-In the documentation,
-\begin{quote}
-  \ty{E}\tye{ = [Int]}
-\end{quote}
-defines a type that contains a list of integers. List elements are separated
-by commas and defined within square brackets. Naturally, lists can also occur
-within structures. The ordering of elements in a list is preserved during
-interpretation; whether or not the ordering matters depends on the operation the
-list is passed to.
-
-As an example, the following two lines each define an instance of \ty{E}.
-\begin{quote}
-  \tye{[1,2,3,4]}\\
-  \tye{[   5 , 2,1,2]}
-\end{quote}
-
-
-\subsection{Type system}
-\label{sec:structural_type_system}
-This section describes the type system of AiryScript. Section
-\ref{sec:type_classification} classifies the type system into some categories
-that are well-known in computer science. Section \ref{sec:type_example} provides
-some examples to illustrate how the type system works.
-
-\subsubsection{Classification}
-\label{sec:type_classification}
-The type system of AiryScript is.
-\begin{description}
-  \item[Strongly typed] When AiryScript expects a parameter of type $T$, it is
-    not possible to provide it with another type. It is not possible to cast
-    values to another type, and there is no type that matches all types.
-  \item[Statically typed] AiryScript determines and checks types while parsing.
-  \item[Structural] Type compatibility and equivalence are determined by the
-    type’s actual structure or definition. Subtyping relations cannot be
-    declared explicitly but are created automatically by shared structure.
-  \item[Implicit] AiryScript never requires the user to explicitly declare any
-    types.
-\end{description}
-
-\subsubsection{Examples}
-\label{sec:type_examples}
-This section discusses the structural type system of AiryScript by providing an
-extended example.
-
-We look at the type of object $o$ defined as
-\begin{quote}
-  \ins{a: 10, c: "bottles of beer"}.
-\end{quote}
-The type of $o$ is \ins{a: Int, c: String}. A discussion of the relation between
-the type of $o$ and the following types should clarify how the type system of
-AiryScript works.
-\begin{quote}
-  \ty{A}\tye{ = \ins{c: String, a: Int}}\\
-  \ty{B}\tye{ = \ins{a: Int, ?b: Int, ?c: String}}\\
-  \ty{C}\tye{ = \ins{a: Int, b: String, c: String}}\\
-  \ty{D}\tye{ = \ins{c: Int, a: String}}
-\end{quote}
-\begin{itemize}
-  \item $o$ is an instance of \ty{A}. In fact, \ty{A} is just shorthand for
-    $o$’s type. The order in which \tye{c} and \tye{a} appear does not matter:
-    as far as AiryScript is concerned the types \ins{c: String, a:Int}
-    and \ins{a:Int, c: String} are identical. The one-dimensional nature of text
-    makes it so that we have to specify an ordering that is actually
-    meaningless.
-
-  \item $o$ is an instance of \ty{B}, which also means that \ty{A} is a subtype
-    of \ty{B}.  We can ‘ignore’ the optional properties of \tye{c}. Note that
-    the fact that \ty{C} can be a super type of \ty{B} without having to specify
-    this in \ty{C} is quite special, and typical for structural type systems.
-
-  \item $o$ is not an instance of \ty{C}. \ty{A} and \ty{C} are not related.
-    
-    While in most existing structural type systems, like the one of Haxe, \ty{C}
-    would be a subtype of \ty{B}, this is not the case in AiryScript. This is
-    because AiryScript does not allow users to specify properties that are not
-    defined by the type. \ins{a: "bla"} is not an instance of type \ins{a:
-    String, b: String} in AiryScript. The only way to to create a typing
-    hierarchy is through optional parameters.
-
-  \item $o$ is not an instance of \ty{D}. \ty{A} and \ty{D} are not related.
-    
-    Even though \ty{D} also consists of two properties, one an \tye{Int} and one
-    a \tye{String}, \ty{D} is unrelated to \ty{A} because the names of these
-    properties are different in \ty{D} and \ty{A}. The names of properties are
-    part of the type, which allows AiryScript to make types independent of the
-    order of their properties.
-\end{itemize}
-
-\subsection{Describing and calling operations}
-\label{sec:operations_spec}
-This section specifies how to perform operations in AiryScript and explains the
-notation that Section \ref{sec:operations} uses to specify operations.
-
-
-\paragraph{Basic operations}
-In the documentation,
-\begin{quote}
-  \tye{DO INTEGER <Int>}
-\end{quote}
-specifies an operation that takes an integer. Together with the operation
-signature, the documentation defines what an operation does. Users can call the
-function above in an AiryScript script file as
-\begin{quote}
-  \tye{DO INTEGER 5}
-  .
-\end{quote}
-It is also possible to write
-\begin{quote}
-  \tye{DO INTEGER \{5\}}
-  ;
-\end{quote}
-we leave it up to the user to decide which syntax he/she likes best.
-Of course, operations can also take structures as their arguments. Users can
-separate all parts by one or multiple spaces and/or newlines. For example,
-\begin{quote}
-\begin{verbatim}
-DO          INTEGER
-      5 DO INTEGER 10
-\end{verbatim}
-\end{quote}
-does what the user wants and performs the operation \tye{DO INTEGER} twice.
-Note that AiryScript does not require the user to put a semicolon at the end of
-an operation or between operations.
-AiryScript does not parse input like
-\begin{quote}
-  \tye{ADDINTEGERS 5 10} .
-\end{quote}
-
-\paragraph{Separated operations}
-Some operations in AiryScript take multiple arguments. Although AiryScript is
-capable of parsing input like
-\begin{quote}
-  \tye{DO STUFF TO DURING <Stuff> <Something> <Period>}
-  ,
-\end{quote}
-we believe this is not very legible. AiryScript’s operations are therefore
-usually split up like
-\begin{quote}
-  \tye{DO <Stuff> TO <Something> DURING <Period>}
-\end{quote}
-to increase legibility. Note that this really does define a \emph{single
-operation} that has access to three arguments (instances of \tye{Stuff},
-\tye{Something} and \tye{Period}) and not three operations (\tye{DO}, \tye{TO}
-and \tye{DURING}) that each operate on a single argument.
-
-The order of the keywords is fixed, so users are not able to write
-\begin{quote}
-  \tye{DO \{…\} DURING \{…\} TO \{…\}}
-  .
-\end{quote}
-
-AiryScript allows users to put spaces and newlines in between keywords, but we
-advise users to write legible code by keeping these kind of ‘separated
-operations’ together, and not separate them by newlines.
-
-
-%Operations in AiryScript are always capitalized.
-
-
-
-
-%\subsection{Though decisions}
-%\label{sec:though_decisions}
-%This section documents some of the tougher choices we had to make when designing
-%specific operations for the language. 
-%
-%This section often refers to actual operations in the language, but is not a
-%language description. See Section \ref{sec:operations} for a consistent and
-%complete overview of all operations and types.
-%
-%As is often the case with though choices, each possible decision has advantages
-%and disadvantages. We made choices only after several hours of discussion.
-
 \subsection{Protecting the user}
 \label{sec:protecting}
+Before we continue with the technical details of the meta model of our DSL
+that we choose after the last iteration we take a small sidestep.
+
 This section explains our decision to prefer more powerful operations over more
 safe ones. We use the ‘change city’ operation as a simple example where the
 difference between powerful and safe is clearly visible.
@@ -671,4 +379,334 @@ exists a template that relies on it. Basically, AiryScript makes sure all the
 constraints specified in the domain of Section \ref{sec:domain} are kept.
 
 
-\input{operations}
+
+
+\subsection{The semantic model}
+
+
+% \begin{figure}
+% \includegraphics[width=\textwidth]{img/Meta-Model.jpg}
+% \caption{High level semantic model.}
+% \label{fig:semantic-model}
+% \end{figure}
+
+Lets look at how the final structure of our language looks like after the
+third iteration. This is represented schematically in \ref{fig:semantic-model}.
+This is the high level semantic model of our DSL, we did not include all the
+individual operations and structure types in the diagram but they all satisfy
+the given model.
+
+The semantic model is basically the point of contact between the parser and
+the handler (the part of the system executing those operations, which involves
+querying the database). The parser will populate this model, while the handler
+will act upon this model, which is a nice way of decoupling these 2
+functionalities.
+
+Concretely all the operations and structures in this semantic model map 1 to 1
+with scala case classes. The parser will parse a string into the proper
+\class{Operation}-case class. This piece of data can be passed to the handler to
+actually perform the operation.
+
+But we are running ahead, lets first examine these operations, structures and
+primitive types in more detail.
+
+
+\subsection{Describing and creating structures}
+\label{sec:syntax_spec}
+This section specifies how to create structures in AiryScript and explains the
+notation that Section \ref{sec:operations} uses to specify types. Even though
+AiryScript does not require its users to declare types or provide them with
+the possibility to define their own types, knowing how to describe types and how
+the typing system of AiryScript works is important, since AiryScript is a typed
+language.
+
+\paragraph{Primitive types}
+AiryScript supports strings and integers as primitive types. The statements
+\begin{quote}
+  \tye{5}\\
+  \tye{502349}
+\end{quote}
+define the integers 5 and 502349. The statements
+\begin{quote}
+  \tye{IAmFreeOfSpacesAndIThereforeDoNotRequireQuotation}\\
+  \tye{"I am not free of spaces and therefore I do require quotation"}\\
+  \tye{"IAmFreeOfSpacesYetICanStillUseQuotation"}
+\end{quote}
+each define a string. Users should surround strings that contain spaces and/or
+commas with quotation marks.
+
+
+\paragraph{Structures}
+AiryScript also supports structures. Structures consist of one or several
+properties. Properties have a name and a value. A name is always a string that
+does not contain any spaces. A value is either a primitive value or another
+structure. Names are separated from values by a colon, properties are separated
+from each other by commas and structures are defined within curly brackets. As
+an example,
+\begin{quote}
+  \ins{a: 10, b: 5}
+\end{quote}
+defines a structure with a property named \tye{a} that has an integer primitive
+value of ten and a property named \tye{b} that has an integer primitive value of
+five. AiryScript is not sensitive to whitespace or newlines. For example,
+\begin{quote}
+  \begin{verbatim}
+{  a:10, b       :
+                    5}
+  \end{verbatim}
+\end{quote}
+defines the same structure as before.
+
+
+\paragraph{Basic structure types}
+In the documentation,
+\begin{quote}
+  \ty{A}\tye{ = \ins{a: Int, b: String}}
+\end{quote}
+defines \ty{A} to be shorthand for the type that collects all structures that
+have properties named \tye{a} and \tye{b} with respective types \tye{Int} and
+\tye{String}. Structures that define an \tye{Int} and a \tye{String} with
+different names do not belong to type \ty{A}. This simple definition completely
+describes a type. If AiryScript would allow users to define their own types and
+operations, this would be the syntax it would use.
+
+As an example, the following two lines each define a structure that is an
+instance of \ty{A}.
+\begin{quote}
+  \ins{a: 10, b: tomatoes}\\
+  \ins{b: "bottles of beer", a: 10}\\
+\end{quote}
+
+
+\paragraph{Types with optional properties}
+In the documentation,
+\begin{quote}
+  \ty{B}\tye{ = \ins{a: Int, ?b: Int, ?c: String}}
+\end{quote}
+defines \ty{B} to be shorthand to the type that collects all structures that
+have properties named \tye{a} with type \ty{Int}, and that optionally has two
+more properties with names \tye{b} and \tye{c} and values with respective types
+\ty{Int} and \ty{String}. Structures that either have parameters
+with names different from \tye{a}, \tye{b} or \tye{c} or that have an \tye{a},
+\tye{b} or \tye{c} with a different type do not belong to \ty{B}.
+
+As an example, all of the following lines define a structure that is an
+instance of \ty{B}.
+\begin{quote}
+  \ins{c: "bottles of beer", a: 10}\\
+  \ins{a: 10, b: 5 c: "bottles of beer"}\\
+  \ins{a: 10, b: 5}
+\end{quote}
+
+\paragraph{Types of nested structures}
+In the documentation,
+\begin{quote}
+  \ty{C}\tye{ = \ins{a: B, b: String}}
+\end{quote}
+defines \ty{C} to be shorthand for the type of structures that have properties
+with names \tye{aB} and \tye{aString}, with types \tye{B} and \tye{String}
+respectively. Since we can further expand \ty{B}, this is in turn shorthand for
+\begin{quote}
+  \ins{a: \ins{a: Int, ?b: Int, ?c: String}, b: String}.
+\end{quote}
+
+As an example, the following line defines a structure that is an instance of
+\ty{C}.
+\begin{quote}
+  \ins{b: \ins{a: 10, b: 5}, a: "bottles of beer"}
+\end{quote}
+
+\paragraph{Union types}
+In the documentation,
+\begin{quote}
+  \ty{D}\tye{ = A | B}
+\end{quote}
+defines a type that contains both the structures contained in \tye{A} and the
+structures contained in \tye{B}.
+
+As an example, both of the following lines define a structure that is an
+instance of \ty{D}.
+\begin{quote}
+  \ins{a: 10, b: tomatoes}\\
+  \ins{a: 10, b: 5}
+\end{quote}
+
+
+\paragraph{Lists}
+In the documentation,
+\begin{quote}
+  \ty{E}\tye{ = [Int]}
+\end{quote}
+defines a type that contains a list of integers. List elements are separated
+by commas and defined within square brackets. Naturally, lists can also occur
+within structures. The ordering of elements in a list is preserved during
+interpretation; whether or not the ordering matters depends on the operation the
+list is passed to.
+
+As an example, the following two lines each define an instance of \ty{E}.
+\begin{quote}
+  \tye{[1,2,3,4]}\\
+  \tye{[   5 , 2,1,2]}
+\end{quote}
+
+
+\subsection{Type system}
+\label{sec:structural_type_system}
+This section describes the type system of AiryScript. Section
+\ref{sec:type_classification} classifies the type system into some categories
+that are well-known in computer science. Section \ref{sec:type_example} provides
+some examples to illustrate how the type system works.
+
+\subsubsection{Classification}
+\label{sec:type_classification}
+The type system of AiryScript is.
+\begin{description}
+  \item[Strongly typed] When AiryScript expects a parameter of type $T$, it is
+    not possible to provide it with another type. It is not possible to cast
+    values to another type, and there is no type that matches all types.
+  \item[Statically typed] AiryScript determines and checks types while parsing.
+  \item[Structural] Type compatibility and equivalence are determined by the
+    type’s actual structure or definition. Subtyping relations cannot be
+    declared explicitly but are created automatically by shared structure.
+  \item[Implicit] AiryScript never requires the user to explicitly declare any
+    types.
+\end{description}
+
+\subsubsection{Examples}
+\label{sec:type_examples}
+This section discusses the structural type system of AiryScript by providing an
+extended example.
+
+We look at the type of object $o$ defined as
+\begin{quote}
+  \ins{a: 10, c: "bottles of beer"}.
+\end{quote}
+The type of $o$ is \ins{a: Int, c: String}. A discussion of the relation between
+the type of $o$ and the following types should clarify how the type system of
+AiryScript works.
+\begin{quote}
+  \ty{A}\tye{ = \ins{c: String, a: Int}}\\
+  \ty{B}\tye{ = \ins{a: Int, ?b: Int, ?c: String}}\\
+  \ty{C}\tye{ = \ins{a: Int, b: String, c: String}}\\
+  \ty{D}\tye{ = \ins{c: Int, a: String}}
+\end{quote}
+\begin{itemize}
+  \item $o$ is an instance of \ty{A}. In fact, \ty{A} is just shorthand for
+    $o$’s type. The order in which \tye{c} and \tye{a} appear does not matter:
+    as far as AiryScript is concerned the types \ins{c: String, a:Int}
+    and \ins{a:Int, c: String} are identical. The one-dimensional nature of text
+    makes it so that we have to specify an ordering that is actually
+    meaningless.
+
+  \item $o$ is an instance of \ty{B}, which also means that \ty{A} is a subtype
+    of \ty{B}.  We can ‘ignore’ the optional properties of \tye{c}. Note that
+    the fact that \ty{C} can be a super type of \ty{B} without having to specify
+    this in \ty{C} is quite special, and typical for structural type systems.
+
+  \item $o$ is not an instance of \ty{C}. \ty{A} and \ty{C} are not related.
+
+    While in most existing structural type systems, like the one of Haxe, \ty{C}
+    would be a subtype of \ty{B}, this is not the case in AiryScript. This is
+    because AiryScript does not allow users to specify properties that are not
+    defined by the type. \ins{a: "bla"} is not an instance of type \ins{a:
+    String, b: String} in AiryScript. The only way to to create a typing
+    hierarchy is through optional parameters.
+
+  \item $o$ is not an instance of \ty{D}. \ty{A} and \ty{D} are not related.
+
+    Even though \ty{D} also consists of two properties, one an \tye{Int} and one
+    a \tye{String}, \ty{D} is unrelated to \ty{A} because the names of these
+    properties are different in \ty{D} and \ty{A}. The names of properties are
+    part of the type, which allows AiryScript to make types independent of the
+    order of their properties.
+\end{itemize}
+
+\subsection{Describing and calling operations}
+\label{sec:operations_spec}
+This section specifies how to perform operations in AiryScript and explains the
+notation that Section \ref{sec:operations} uses to specify operations.
+
+
+\paragraph{Basic operations}
+In the documentation,
+\begin{quote}
+  \tye{DO INTEGER <Int>}
+\end{quote}
+specifies an operation that takes an integer. Together with the operation
+signature, the documentation defines what an operation does. Users can call the
+function above in an AiryScript script file as
+\begin{quote}
+  \tye{DO INTEGER 5}
+  .
+\end{quote}
+It is also possible to write
+\begin{quote}
+  \tye{DO INTEGER \{5\}}
+  ;
+\end{quote}
+we leave it up to the user to decide which syntax he/she likes best.
+Of course, operations can also take structures as their arguments. Users can
+separate all parts by one or multiple spaces and/or newlines. For example,
+\begin{quote}
+\begin{verbatim}
+DO          INTEGER
+      5 DO INTEGER 10
+\end{verbatim}
+\end{quote}
+does what the user wants and performs the operation \tye{DO INTEGER} twice.
+Note that AiryScript does not require the user to put a semicolon at the end of
+an operation or between operations.
+AiryScript does not parse input like
+\begin{quote}
+  \tye{ADDINTEGERS 5 10} .
+\end{quote}
+
+\paragraph{Separated operations}
+Some operations in AiryScript take multiple arguments. Although AiryScript is
+capable of parsing input like
+\begin{quote}
+  \tye{DO STUFF TO DURING <Stuff> <Something> <Period>}
+  ,
+\end{quote}
+we believe this is not very legible. AiryScript’s operations are therefore
+usually split up like
+\begin{quote}
+  \tye{DO <Stuff> TO <Something> DURING <Period>}
+\end{quote}
+to increase legibility. Note that this really does define a \emph{single
+operation} that has access to three arguments (instances of \tye{Stuff},
+\tye{Something} and \tye{Period}) and not three operations (\tye{DO}, \tye{TO}
+and \tye{DURING}) that each operate on a single argument.
+
+The order of the keywords is fixed, so users are not able to write
+\begin{quote}
+  \tye{DO \{…\} DURING \{…\} TO \{…\}}
+  .
+\end{quote}
+
+AiryScript allows users to put spaces and newlines in between keywords, but we
+advise users to write legible code by keeping these kind of ‘separated
+operations’ together, and not separate them by newlines.
+
+
+%Operations in AiryScript are always capitalized.
+
+
+
+
+%\subsection{Though decisions}
+%\label{sec:though_decisions}
+%This section documents some of the tougher choices we had to make when designing
+%specific operations for the language.
+%
+%This section often refers to actual operations in the language, but is not a
+%language description. See Section \ref{sec:operations} for a consistent and
+%complete overview of all operations and types.
+%
+%As is often the case with though choices, each possible decision has advantages
+%and disadvantages. We made choices only after several hours of discussion.
+
+
+
+
+\input{3.5-operations/operations}
